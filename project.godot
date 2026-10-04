@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="MinSee"
-config/description="JRPG por turnos pixel art (64x64) inspirado en Trails"
+config/description="JRPG por turnos en 3D estilo anime, inspirado en Trails"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
