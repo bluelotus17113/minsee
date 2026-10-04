@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1_weaponscript"]
+
+[resource]
+script = ExtResource("1_weaponscript")
+weapon_name = "Espada de Hierro"
+description = "Espada básica para iniciar la aventura."
+type = 0
+attack_bonus = 6
+speed_penalty = 0
+crit_bonus = 5
+price = 120

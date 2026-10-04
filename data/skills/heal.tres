@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1_skillscript"]
+
+[resource]
+script = ExtResource("1_skillscript")
+skill_name = "Curar"
+description = "Art que restaura HP a un aliado."
+kind = 0
+target = 2
+damage_type = 2
+element = 8
+power = 30
+accuracy = 100
+break_power = 0
+mp_cost = 5
+cp_cost = 0
+cast_time = 1
+skill_range = 3
+aoe_shape = 0
+aoe_radius = 0

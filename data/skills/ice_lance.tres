@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1_skillscript"]
+
+[resource]
+script = ExtResource("1_skillscript")
+skill_name = "Lanza de Hielo"
+description = "Art de hielo. Cast 1, single target."
+kind = 0
+target = 0
+damage_type = 1
+element = 4
+power = 22
+accuracy = 95
+mp_cost = 9
+cast_time = 1
+skill_range = 4
+aoe_shape = 0
+aoe_radius = 0
+break_power = 25

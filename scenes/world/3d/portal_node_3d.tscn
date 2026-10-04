@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3 uid="uid://b1minseeportal3d"]
+
+[ext_resource type="Script" path="res://scripts/world/portal_node_3d.gd" id="1_portal3d"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pad"]
+top_radius = 0.7
+bottom_radius = 0.7
+height = 0.06
+
+[sub_resource type="StandardMaterial3D" id="Mat_portal"]
+albedo_color = Color(0.4, 0.8, 1, 0.85)
+emission_enabled = true
+emission = Color(0.3, 0.6, 1, 1)
+emission_energy_multiplier = 1.5
+transparency = 1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_portal"]
+height = 1.6
+radius = 0.7
+
+[node name="PortalNode3D" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_portal3d")
+
+[node name="Pad" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+mesh = SubResource("CylinderMesh_pad")
+surface_material_override/0 = SubResource("Mat_portal")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("CylinderShape3D_portal")
+
+[node name="Prompt" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+billboard = 1
+text = "[E] Entrar"
+font_size = 48
+outline_size = 10
+modulate = Color(1, 0.9, 0.4, 1)

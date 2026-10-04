@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1_skillscript"]
+
+[resource]
+script = ExtResource("1_skillscript")
+skill_name = "Castigo Sagrado"
+description = "Art sagrado. AoE pequeño."
+kind = 0
+target = 5
+damage_type = 1
+element = 8
+power = 26
+accuracy = 95
+mp_cost = 12
+cast_time = 2
+skill_range = 3
+aoe_shape = 1
+aoe_radius = 1
+break_power = 28

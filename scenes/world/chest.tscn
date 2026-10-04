@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1minseechest1"]
+
+[ext_resource type="Script" path="res://scripts/world/chest.gd" id="1_chest"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chest"]
+size = Vector2(20, 16)
+
+[node name="Chest" type="Area2D"]
+script = ExtResource("1_chest")
+
+[node name="Sprite" type="ColorRect" parent="."]
+offset_left = -10.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 8.0
+color = Color(0.65, 0.45, 0.18, 1)
+mouse_filter = 2
+
+[node name="StaticSprite" type="Sprite2D" parent="."]
+visible = false
+centered = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_chest")
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -10.0
+offset_top = -28.0
+offset_right = 10.0
+offset_bottom = -14.0
+text = "[E]"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)

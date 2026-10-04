@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_data.gd" id="1_encscript"]
+[ext_resource type="Resource" path="res://data/enemies/slime.tres" id="2_slime"]
+
+[resource]
+script = ExtResource("1_encscript")
+encounter_name = "Pareja de Slimes"
+description = "Dos slimes débiles."
+enemies = Array[Resource]([ExtResource("2_slime"), ExtResource("2_slime")])

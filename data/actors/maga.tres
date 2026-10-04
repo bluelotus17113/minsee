@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ActorStats" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/actor_stats.gd" id="1_actorscript"]
+[ext_resource type="Resource" path="res://data/skills/fireball.tres" id="2_fireball"]
+[ext_resource type="Resource" path="res://data/skills/heal.tres" id="3_heal"]
+
+[resource]
+script = ExtResource("1_actorscript")
+actor_name = "Lia"
+color = Color(0.85, 0.35, 0.85, 1)
+max_hp = 80
+max_mp = 70
+max_cp = 180
+attack = 7
+defense = 5
+magic = 20
+speed = 9
+luck = 7
+move_range = 3
+melee_range = 1
+skills = Array[Resource]([ExtResource("2_fireball"), ExtResource("3_heal")])
+inventory = Array[Resource]([])

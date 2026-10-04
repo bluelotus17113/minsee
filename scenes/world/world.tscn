@@ -1,0 +1,104 @@
+[gd_scene load_steps=16 format=3 uid="uid://b1minseeworld"]
+
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer" path="res://scenes/world/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseeenemy" path="res://scenes/world/enemy_overworld.tscn" id="2_enemyow"]
+[ext_resource type="PackedScene" uid="uid://b1minseenpc" path="res://scenes/world/npc.tscn" id="3_npc"]
+[ext_resource type="Resource" path="res://data/npcs/aldeano.tres" id="4_aldeano"]
+[ext_resource type="Resource" path="res://data/npcs/mercader.tres" id="5_mercader"]
+[ext_resource type="Resource" path="res://data/npcs/posadero.tres" id="6_posadero"]
+[ext_resource type="Resource" path="res://data/npcs/lia_reclutadora.tres" id="7_lia"]
+[ext_resource type="PackedScene" uid="uid://b1minseechest1" path="res://scenes/world/chest.tscn" id="8_chest"]
+[ext_resource type="Resource" path="res://data/chests/cofre_pociones.tres" id="9_chestdata"]
+[ext_resource type="PackedScene" uid="uid://b1minseeevent1" path="res://scenes/world/one_shot_event.tscn" id="10_event"]
+[ext_resource type="Resource" path="res://data/events/encuentro_unico.tres" id="11_eventdata"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal" path="res://scenes/world/portal_node.tscn" id="12_portal"]
+[ext_resource type="PackedScene" uid="uid://b1minseezone1" path="res://scenes/world/random_encounter_zone.tscn" id="13_zone"]
+[ext_resource type="Resource" path="res://data/encounter_tables/campo_inicial.tres" id="14_table"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(520, 16)
+
+[node name="World" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+color = Color(0.13, 0.16, 0.12, 1)
+
+[node name="Title" type="Label" parent="."]
+offset_left = -90.0
+offset_top = -180.0
+offset_right = 90.0
+offset_bottom = -160.0
+text = "MinSee - Demo"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="."]
+offset_left = -230.0
+offset_top = -160.0
+offset_right = 230.0
+offset_bottom = -140.0
+text = "WASD moverte · [E] hablar/cofre · [Enter] menú · choca al rojo"
+horizontal_alignment = 1
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(-120, 0)
+
+[node name="Enemy1" parent="." instance=ExtResource("2_enemyow")]
+position = Vector2(80, -30)
+
+[node name="Enemy2" parent="." instance=ExtResource("2_enemyow")]
+position = Vector2(140, 60)
+
+[node name="Aldeano" parent="." instance=ExtResource("3_npc")]
+position = Vector2(-60, -80)
+npc_data = ExtResource("4_aldeano")
+
+[node name="Mercader" parent="." instance=ExtResource("3_npc")]
+position = Vector2(-160, 80)
+npc_data = ExtResource("5_mercader")
+
+[node name="Posadero" parent="." instance=ExtResource("3_npc")]
+position = Vector2(-180, -50)
+npc_data = ExtResource("6_posadero")
+
+[node name="Lia" parent="." instance=ExtResource("3_npc")]
+position = Vector2(0, 100)
+npc_data = ExtResource("7_lia")
+
+[node name="Cofre" parent="." instance=ExtResource("8_chest")]
+position = Vector2(180, -90)
+chest_data = ExtResource("9_chestdata")
+
+[node name="EventoUnico" parent="." instance=ExtResource("10_event")]
+position = Vector2(-200, 130)
+event_data = ExtResource("11_eventdata")
+
+[node name="PortalAlExterior" parent="." instance=ExtResource("12_portal")]
+position = Vector2(250, 0)
+portal_id = "ir_exterior"
+target_scene = "res://scenes/world/exterior_casa.tscn"
+target_portal_id = "vuelta_hub"
+prompt_text = "Ir al pueblo"
+direction = 3
+
+[node name="ZonaCampo" parent="." instance=ExtResource("13_zone")]
+position = Vector2(0, 60)
+encounter_table = ExtResource("14_table")
+zone_size = Vector2(560, 240)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, -195)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="WallBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, 195)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_wall")

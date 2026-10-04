@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EncounterTableData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://scripts/data/encounter_table_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://data/encounters/skeleton_solo.tres" id="3_sk"]
+[ext_resource type="Resource" path="res://data/encounters/bat_swarm.tres" id="4_bat"]
+
+[sub_resource type="Resource" id="E1"]
+script = ExtResource("2_entry")
+encounter = ExtResource("3_sk")
+weight = 50
+
+[sub_resource type="Resource" id="E2"]
+script = ExtResource("2_entry")
+encounter = ExtResource("4_bat")
+weight = 50
+
+[resource]
+script = ExtResource("1_table")
+table_name = "Profundidades de la cueva"
+description = "Esqueletos y murciélagos."
+entries = Array[Resource]([SubResource("E1"), SubResource("E2")])
+pixels_per_check = 180
+encounter_chance = 0.35
+escape_chance = 0.5
+initial_grace_seconds = 1.5
+post_battle_grace_seconds = 2.5

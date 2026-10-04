@@ -1,0 +1,182 @@
+[gd_scene load_steps=2 format=3 uid="uid://b1minseepause1"]
+
+[ext_resource type="Script" path="res://scripts/menu/pause_menu.gd" id="1_pause"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 12
+script = ExtResource("1_pause")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Backdrop"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -160.0
+offset_right = 280.0
+offset_bottom = 160.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+
+[node name="Header" type="HBoxContainer" parent="Backdrop/Panel/VBox"]
+
+[node name="Title" type="Label" parent="Backdrop/Panel/VBox/Header"]
+text = "Menú"
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+
+[node name="Chapter" type="Label" parent="Backdrop/Panel/VBox/Header"]
+text = "Cap 1"
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+
+[node name="Gold" type="Label" parent="Backdrop/Panel/VBox/Header"]
+text = "Oro: 0"
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
+
+[node name="Tabs" type="TabContainer" parent="Backdrop/Panel/VBox"]
+size_flags_vertical = 3
+
+[node name="Estado" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Estado"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Estado/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Items" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Items"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Items/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Equipo" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Equipo"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Equipo/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Habilidades" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Habilidades"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Habilidades/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Quests" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Quests"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Quests/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Vínculos" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Vínculos"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Vínculos/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Árbol" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Árbol"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Árbol/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Bestiario" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="Scroll" type="ScrollContainer" parent="Backdrop/Panel/VBox/Tabs/Bestiario"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Bestiario/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Formación" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Formación"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="Sistema" type="Control" parent="Backdrop/Panel/VBox/Tabs"]
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Sistema"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="SaveTitle" type="Label" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox"]
+text = "Guardar"
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+
+[node name="SaveBtns" type="VBoxContainer" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox"]
+
+[node name="Slot1" type="Button" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox/SaveBtns"]
+text = "Slot 1"
+
+[node name="Slot2" type="Button" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox/SaveBtns"]
+text = "Slot 2"
+
+[node name="Slot3" type="Button" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox/SaveBtns"]
+text = "Slot 3"
+
+[node name="Status" type="Label" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox"]
+text = ""
+theme_override_colors/font_color = Color(0.7, 0.95, 0.7, 1)
+
+[node name="MainMenuBtn" type="Button" parent="Backdrop/Panel/VBox/Tabs/Sistema/VBox"]
+text = "Salir al menú principal"
+
+[node name="Footer" type="HBoxContainer" parent="Backdrop/Panel/VBox"]
+
+[node name="Hint" type="Label" parent="Backdrop/Panel/VBox/Footer"]
+text = "[Enter/Esc] Cerrar"
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="Close" type="Button" parent="Backdrop/Panel/VBox/Footer"]
+text = "Cerrar"

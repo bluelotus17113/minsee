@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ActorStats" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/actor_stats.gd" id="1_actorscript"]
+[ext_resource type="Resource" path="res://data/weapons/sword_basic.tres" id="2_weapon"]
+[ext_resource type="Resource" path="res://data/skills/fireball.tres" id="3_fireball"]
+[ext_resource type="Resource" path="res://data/skills/heal.tres" id="4_heal"]
+[ext_resource type="Resource" path="res://data/skills/spirit_blade.tres" id="5_blade"]
+[ext_resource type="Resource" path="res://data/skills/stunning_blow.tres" id="6_stun"]
+[ext_resource type="Resource" path="res://data/skills/s_craft_min.tres" id="7_scraft"]
+[ext_resource type="Resource" path="res://data/skill_trees/min_tree.tres" id="8_tree"]
+[ext_resource type="Texture2D" path="res://sprites/characters/min/min_overworld.png" id="9_sprite"]
+
+[resource]
+script = ExtResource("1_actorscript")
+actor_name = "Min"
+sprite = ExtResource("9_sprite")
+sprite_size = 32
+color = Color(0.35, 0.55, 0.95, 1)
+max_hp = 120
+max_mp = 35
+max_cp = 200
+attack = 12
+defense = 8
+magic = 14
+speed = 11
+luck = 6
+move_range = 3
+melee_range = 1
+weapon = ExtResource("2_weapon")
+skills = Array[Resource]([ExtResource("3_fireball"), ExtResource("4_heal"), ExtResource("5_blade"), ExtResource("6_stun"), ExtResource("7_scraft")])
+inventory = Array[Resource]([])
+skill_tree = ExtResource("8_tree")

@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3 uid="uid://b1minseeshop1"]
+
+[ext_resource type="Script" path="res://scripts/dialogue/shop_ui.gd" id="1_shopui"]
+
+[node name="ShopUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_shopui")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="Panel" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -130.0
+offset_right = 200.0
+offset_bottom = 130.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox"]
+
+[node name="Title" type="Label" parent="Panel/VBox/Header"]
+text = "Tienda"
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+
+[node name="Gold" type="Label" parent="Panel/VBox/Header"]
+text = "Oro: 0"
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
+
+[node name="Greeting" type="Label" parent="Panel/VBox"]
+text = ""
+theme_override_font_sizes/font_size = 10
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/VBox"]
+size_flags_vertical = 3
+
+[node name="List" type="VBoxContainer" parent="Panel/VBox/Scroll"]
+size_flags_horizontal = 3
+
+[node name="Footer" type="HBoxContainer" parent="Panel/VBox"]
+
+[node name="Status" type="Label" parent="Panel/VBox/Footer"]
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.8, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="Close" type="Button" parent="Panel/VBox/Footer"]
+text = "Salir [Esc]"

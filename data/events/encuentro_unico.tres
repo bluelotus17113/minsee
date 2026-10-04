@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/event_data.gd" id="1_event"]
+[ext_resource type="Resource" path="res://data/dialogues/encuentro_misterioso.tres" id="2_dlg"]
+
+[resource]
+script = ExtResource("1_event")
+event_id = "encuentro_unico_demo"
+label = "Encuentro misterioso"
+description = "Evento de prueba que da 50 oro la primera vez."
+trigger_dialogue = ExtResource("2_dlg")
+action = 1
+reward_items = Array[Resource]([])
+reward_gold = 50

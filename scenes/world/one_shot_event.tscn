@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1minseeevent1"]
+
+[ext_resource type="Script" path="res://scripts/world/one_shot_event.gd" id="1_event"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_event"]
+size = Vector2(40, 40)
+
+[node name="OneShotEvent" type="Area2D"]
+script = ExtResource("1_event")
+
+[node name="Marker" type="ColorRect" parent="."]
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+color = Color(0.9, 0.4, 1, 0.6)
+mouse_filter = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_event")
+
+[node name="Prompt" type="Label" parent="."]
+offset_left = -10.0
+offset_top = -28.0
+offset_right = 10.0
+offset_bottom = -14.0
+text = "[E]"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.5, 1, 1)

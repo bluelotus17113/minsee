@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_data.gd" id="1_encscript"]
+[ext_resource type="Resource" path="res://data/enemies/goblin_boss.tres" id="2_gb"]
+[ext_resource type="Resource" path="res://data/enemies/skeleton.tres" id="3_sk"]
+
+[resource]
+script = ExtResource("1_encscript")
+encounter_name = "Goblin Rey y guardia"
+enemies = Array[Resource]([ExtResource("2_gb"), ExtResource("3_sk")])

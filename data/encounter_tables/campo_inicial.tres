@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="EncounterTableData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://scripts/data/encounter_table_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://data/encounters/slime_pair.tres" id="3_slimes"]
+[ext_resource type="Resource" path="res://data/encounters/goblin_solo.tres" id="4_goblin"]
+
+[sub_resource type="Resource" id="Entry_slimes"]
+script = ExtResource("2_entry")
+encounter = ExtResource("3_slimes")
+weight = 60
+note = "Encuentro común"
+min_chapter = 0
+requires_flag = ""
+blocked_by_flag = ""
+
+[sub_resource type="Resource" id="Entry_goblin"]
+script = ExtResource("2_entry")
+encounter = ExtResource("4_goblin")
+weight = 40
+note = "Goblin raro"
+min_chapter = 0
+requires_flag = ""
+blocked_by_flag = ""
+
+[resource]
+script = ExtResource("1_table")
+table_name = "Campo del Hub"
+description = "Encuentros básicos en la zona del hub."
+entries = Array[Resource]([SubResource("Entry_slimes"), SubResource("Entry_goblin")])
+pixels_per_check = 140
+encounter_chance = 0.25
+escape_chance = 0.5
+initial_grace_seconds = 1.5
+post_battle_grace_seconds = 2.5

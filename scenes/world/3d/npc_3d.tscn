@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1minseenpc3d"]
+
+[ext_resource type="Script" path="res://scripts/world/npc_3d.gd" id="1_npc3d"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_npc"]
+height = 1.4
+radius = 0.5
+
+[node name="NPC3D" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+script = ExtResource("1_npc3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("CylinderShape3D_npc")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+billboard = 1
+texture_filter = 0
+pixel_size = 0.04
+modulate = Color(0.9, 0.85, 0.5, 1)
+
+[node name="Prompt" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+billboard = 1
+text = "[E]"
+font_size = 64
+outline_size = 12
+modulate = Color(1, 0.9, 0.4, 1)

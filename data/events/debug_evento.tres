@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/event_data.gd" id="1_event"]
+
+[resource]
+script = ExtResource("1_event")
+event_id = "debug_evento_test"
+label = "Test Evento"
+description = "Da 200 oro y se marca como completado."
+action = 1
+reward_gold = 200

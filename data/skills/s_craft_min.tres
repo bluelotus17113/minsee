@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1_skillscript"]
+
+[resource]
+script = ExtResource("1_skillscript")
+skill_name = "Filo del Crepúsculo (S-CRAFT)"
+description = "Limit Break de Min. Consume todo el CP, daño masivo a un objetivo."
+kind = 1
+target = 0
+damage_type = 0
+element = 1
+power = 80
+accuracy = 100
+mp_cost = 0
+cp_cost = 200
+cast_time = 0
+skill_range = 1
+aoe_shape = 0
+aoe_radius = 0
+break_power = 60
+is_limit_break = true
+limit_min_cp = 100
+limit_damage_mult = 2.5

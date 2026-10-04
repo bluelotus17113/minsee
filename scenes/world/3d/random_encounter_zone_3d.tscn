@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1minseezone3d"]
+
+[ext_resource type="Script" path="res://scripts/world/random_encounter_zone_3d.gd" id="1_zone3d"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone"]
+size = Vector3(8, 2, 8)
+
+[node name="RandomEncounterZone3D" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_zone3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_zone")

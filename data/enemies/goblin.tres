@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemyscript"]
+[ext_resource type="Resource" path="res://data/skills/fireball.tres" id="2_fb"]
+
+[resource]
+script = ExtResource("1_enemyscript")
+enemy_name = "Goblin Pirómano"
+description = "Pequeño y agresivo. Usa fuego."
+color = Color(0.78, 0.32, 0.17, 1)
+max_hp = 55
+max_mp = 20
+max_cp = 100
+attack = 10
+defense = 5
+magic = 8
+speed = 9
+luck = 4
+move_range = 3
+melee_range = 1
+weaknesses_flags = 4
+resistances_flags = 2
+immunities_flags = 0
+break_threshold = 100
+exp_reward = 18
+gold_reward = 14
+skills = Array[Resource]([ExtResource("2_fb")])
+skill_use_chance = 0.4

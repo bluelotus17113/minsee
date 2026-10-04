@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="NPCData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="1_npc"]
+[ext_resource type="Resource" path="res://data/quests/q01_primer_slime.tres" id="2_quest"]
+[ext_resource type="Texture2D" path="res://sprites/characters/npcs/maestre.png" id="3_sprite"]
+
+[resource]
+script = ExtResource("1_npc")
+npc_name = "Maestre"
+description = "Da y completa la quest q01."
+type = 3
+sprite = ExtResource("3_sprite")
+sprite_size = 32
+color = Color(0.6, 0.9, 0.5, 1)
+quest = ExtResource("2_quest")
+auto_complete_on_talk = true

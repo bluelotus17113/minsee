@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1minseeevent3d"]
+
+[ext_resource type="Script" path="res://scripts/world/one_shot_event_3d.gd" id="1_event3d"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_event"]
+size = Vector3(2, 2, 2)
+
+[node name="OneShotEvent3D" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_event3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_event")
+
+[node name="Prompt" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+billboard = 1
+text = "[E]"
+font_size = 48
+modulate = Color(0.9, 0.5, 1, 1)

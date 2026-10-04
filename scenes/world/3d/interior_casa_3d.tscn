@@ -1,0 +1,104 @@
+[gd_scene load_steps=12 format=3 uid="uid://b1minseeint3d"]
+
+[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="PackedScene" path="res://scenes/world/3d/interior_casa.glb" id="1_room"]
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseenpc3d" path="res://scenes/world/3d/npc_3d.tscn" id="3_npc"]
+[ext_resource type="Resource" path="res://data/npcs/aldeano.tres" id="4_aldeano"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal3d" path="res://scenes/world/3d/portal_node_3d.tscn" id="5_portal"]
+[ext_resource type="PackedScene" uid="uid://b1minseechest3d" path="res://scenes/world/3d/chest_3d.tscn" id="6_chest"]
+[ext_resource type="Resource" path="res://data/chests/cofre_pociones.tres" id="7_chestdata"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_proc"]
+sky_horizon_color = Color(0.62, 0.65, 0.7, 1)
+ground_horizon_color = Color(0.18, 0.16, 0.18, 1)
+sun_angle_max = 30.0
+sun_curve = 0.15
+
+[sub_resource type="Sky" id="Sky_minsee"]
+sky_material = SubResource("Sky_proc")
+
+[sub_resource type="Environment" id="Env_minsee"]
+background_mode = 2
+sky = SubResource("Sky_minsee")
+ambient_light_source = 3
+ambient_light_color = Color(0.88, 0.88, 0.95, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="Box_floor"]
+size = Vector3(6, 0.2, 5)
+
+[sub_resource type="BoxShape3D" id="Box_wall_back"]
+size = Vector3(6, 2.5, 0.3)
+
+[sub_resource type="BoxShape3D" id="Box_wall_right"]
+size = Vector3(0.3, 2.5, 5)
+
+[node name="Interior3D" type="Node3D"]
+script = ExtResource("0_setup")
+target_offset = Vector3(0, 0.5, 0)
+distance = 11.0
+pitch_degrees = 35.0
+yaw_degrees = 225.0
+ortho_size = 7.5
+
+[node name="Room" parent="." instance=ExtResource("1_room")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_minsee")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819, -0.487, 0.301, 0, 0.526, 0.851, -0.574, -0.697, 0.43, 0, 4, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 2.5
+shadow_enabled = true
+
+[node name="FillLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+light_color = Color(1, 0.86, 0.62, 1)
+light_energy = 1.2
+omni_range = 8.0
+
+[node name="FloorBody" type="StaticBody3D" parent="."]
+
+[node name="FloorCol" type="CollisionShape3D" parent="FloorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Box_floor")
+
+[node name="WallBackBody" type="StaticBody3D" parent="."]
+
+[node name="WallBackCol" type="CollisionShape3D" parent="WallBackBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -2.5)
+shape = SubResource("Box_wall_back")
+
+[node name="WallRightBody" type="StaticBody3D" parent="."]
+
+[node name="WallRightCol" type="CollisionShape3D" parent="WallRightBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.25, 0)
+shape = SubResource("Box_wall_right")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.1, 1.5)
+
+[node name="Aldeano" parent="." instance=ExtResource("3_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.1, -0.5)
+npc_data = ExtResource("4_aldeano")
+
+[node name="Cofre" parent="." instance=ExtResource("6_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.1, -1.5)
+chest_data = ExtResource("7_chestdata")
+
+[node name="PortalToExterior" parent="." instance=ExtResource("5_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 2.3)
+portal_id = "puerta_interior"
+target_scene = "res://scenes/world/3d/patio_pueblo_3d.tscn"
+target_portal_id = "entrada_casa"
+prompt_text = "Salir afuera"
+
+[node name="Camera3D" type="Camera3D" parent="."]
+projection = 1
+current = true
+size = 7.5
+near = 0.1
+far = 30.0

@@ -1,0 +1,14 @@
+# Godot 4+ — caché del editor, se regenera sola
+.godot/
+
+# Exportaciones (export_presets.cfg puede llevar rutas locales y claves)
+export_presets.cfg
+build/
+*.pck
+*.exe
+*.apk
+*.aab
+
+# Sistema
+.DS_Store
+*~

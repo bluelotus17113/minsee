@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3 uid="uid://b1minseemenu1"]
+
+[ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1_mainmenu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_mainmenu")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.04, 0.08, 1)
+
+[node name="Title" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 60.0
+offset_right = 640.0
+offset_bottom = 130.0
+text = "MinSee"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.95, 0.78, 0.35, 1)
+theme_override_font_sizes/font_size = 56
+
+[node name="Subtitle" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 130.0
+offset_right = 640.0
+offset_bottom = 150.0
+text = "Un JRPG táctico de fantasía"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.8, 0.7, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 90.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(240, 0)
+
+[node name="Continue" type="Button" parent="Center/VBox"]
+text = "Continuar"
+custom_minimum_size = Vector2(240, 40)
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+
+[node name="NewGame" type="Button" parent="Center/VBox"]
+text = "Nuevo juego"
+custom_minimum_size = Vector2(240, 38)
+
+[node name="Load" type="Button" parent="Center/VBox"]
+text = "Cargar partida"
+custom_minimum_size = Vector2(240, 38)
+
+[node name="Options" type="Button" parent="Center/VBox"]
+text = "Opciones"
+custom_minimum_size = Vector2(240, 38)
+
+[node name="Debug" type="Button" parent="Center/VBox"]
+text = "Debug Map"
+custom_minimum_size = Vector2(240, 30)
+theme_override_colors/font_color = Color(0.6, 0.95, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Quit" type="Button" parent="Center/VBox"]
+text = "Salir"
+custom_minimum_size = Vector2(240, 38)
+
+[node name="VersionLabel" type="Label" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -22.0
+offset_right = -8.0
+offset_bottom = -4.0
+text = "MinSee v0.1"
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
+theme_override_font_sizes/font_size = 10

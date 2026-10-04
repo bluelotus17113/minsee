@@ -1,0 +1,98 @@
+[gd_scene load_steps=5 format=3 uid="uid://b1minseeexterior"]
+
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer" path="res://scenes/world/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal" path="res://scenes/world/portal_node.tscn" id="2_portal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(420, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house"]
+size = Vector2(120, 60)
+
+[node name="Exterior" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_left = -240.0
+offset_top = -180.0
+offset_right = 240.0
+offset_bottom = 180.0
+color = Color(0.18, 0.27, 0.15, 1)
+
+[node name="Title" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -170.0
+offset_right = 120.0
+offset_bottom = -150.0
+text = "Exterior: Pueblo"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+
+[node name="Hint" type="Label" parent="."]
+offset_left = -180.0
+offset_top = -150.0
+offset_right = 180.0
+offset_bottom = -134.0
+text = "[E] junto a la puerta para entrar a la casa · azul vuelve al hub"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.85, 0.85, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="House" type="ColorRect" parent="."]
+offset_left = -60.0
+offset_top = -80.0
+offset_right = 60.0
+offset_bottom = -20.0
+color = Color(0.45, 0.3, 0.22, 1)
+
+[node name="Roof" type="ColorRect" parent="."]
+offset_left = -68.0
+offset_top = -94.0
+offset_right = 68.0
+offset_bottom = -78.0
+color = Color(0.65, 0.25, 0.2, 1)
+
+[node name="Door" type="ColorRect" parent="."]
+offset_left = -8.0
+offset_top = -34.0
+offset_right = 8.0
+offset_bottom = -18.0
+color = Color(0.25, 0.16, 0.1, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(-100, 60)
+
+[node name="PortalToInterior" parent="." instance=ExtResource("2_portal")]
+position = Vector2(0, -26)
+portal_id = "puerta_casa"
+target_scene = "res://scenes/world/interior_casa.tscn"
+target_portal_id = "salida_casa"
+prompt_text = "Entrar a la casa"
+direction = 1
+
+[node name="PortalToHub" parent="." instance=ExtResource("2_portal")]
+position = Vector2(-220, 0)
+portal_id = "vuelta_hub"
+target_scene = "res://scenes/world/world.tscn"
+target_portal_id = "ir_exterior"
+prompt_text = "Volver al hub"
+direction = 4
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, -175)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="WallBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, 175)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="HouseBlocker" type="StaticBody2D" parent="."]
+position = Vector2(0, -55)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseBlocker"]
+shape = SubResource("RectangleShape2D_house")

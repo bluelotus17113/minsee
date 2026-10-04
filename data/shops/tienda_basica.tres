@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/shop_data.gd" id="1_shop"]
+[ext_resource type="Script" path="res://scripts/data/shop_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="3_potion"]
+
+[sub_resource type="Resource" id="ShopEntry_potion"]
+script = ExtResource("2_entry")
+item = ExtResource("3_potion")
+price_override = -1
+stock = -1
+
+[resource]
+script = ExtResource("1_shop")
+shop_name = "Tienda del Mercader"
+greeting = "¡Bienvenido! Mis mejores precios."
+entries = Array[Resource]([SubResource("ShopEntry_potion")])
+sell_back_multiplier = 0.5

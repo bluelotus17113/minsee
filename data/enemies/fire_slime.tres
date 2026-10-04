@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemyscript"]
+[ext_resource type="Texture2D" path="res://sprites/characters/fire_slime/fire_slime.png" id="2_sprite"]
+
+[resource]
+script = ExtResource("1_enemyscript")
+enemy_name = "Slime Ígneo"
+description = "Slime de fuego. Quema al contacto. Débil al agua."
+sprite = ExtResource("2_sprite")
+sprite_size = 32
+color = Color(0.95, 0.5, 0.2, 1)
+max_hp = 45
+max_mp = 15
+max_cp = 100
+attack = 9
+defense = 4
+magic = 8
+speed = 6
+luck = 2
+move_range = 2
+melee_range = 1
+weaknesses_flags = 4
+resistances_flags = 2
+break_threshold = 80
+exp_reward = 12
+gold_reward = 8
+skill_use_chance = 0.0

@@ -1,0 +1,145 @@
+[gd_scene load_steps=16 format=3 uid="uid://b1minseecueva3d"]
+
+[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="PackedScene" path="res://scenes/world/3d/cueva_jefe.glb" id="1_cueva"]
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal3d" path="res://scenes/world/3d/portal_node_3d.tscn" id="3_portal"]
+[ext_resource type="PackedScene" uid="uid://b1minseezone3d" path="res://scenes/world/3d/random_encounter_zone_3d.tscn" id="4_zone"]
+[ext_resource type="Resource" path="res://data/encounter_tables/cueva.tres" id="5_table"]
+[ext_resource type="PackedScene" uid="uid://b1minseeenemyow3d" path="res://scenes/world/3d/enemy_overworld_3d.tscn" id="6_enemy"]
+[ext_resource type="Resource" path="res://data/enemies/bat.tres" id="7_bat"]
+[ext_resource type="Resource" path="res://data/enemies/skeleton.tres" id="8_sk"]
+[ext_resource type="PackedScene" uid="uid://b1minseeevent3d" path="res://scenes/world/3d/one_shot_event_3d.tscn" id="9_event"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_proc"]
+sky_horizon_color = Color(0.10, 0.08, 0.12, 1)
+ground_horizon_color = Color(0.05, 0.04, 0.07, 1)
+sun_angle_max = 30.0
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("Sky_proc")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.45, 0.5, 0.65, 1)
+ambient_light_energy = 0.25
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.15, 0.12, 0.18, 1)
+fog_density = 0.04
+
+[sub_resource type="BoxShape3D" id="Box_ground"]
+size = Vector3(16, 0.2, 14)
+
+[sub_resource type="BoxShape3D" id="Box_wall_N"]
+size = Vector3(16, 3.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="Box_wall_L"]
+size = Vector3(0.5, 3.5, 14)
+
+[sub_resource type="BoxShape3D" id="Box_wall_R"]
+size = Vector3(0.5, 3.5, 14)
+
+[sub_resource type="Resource" id="EventBoss_data"]
+
+[node name="Cueva3D" type="Node3D"]
+script = ExtResource("0_setup")
+target_offset = Vector3(0, 0.8, 0)
+distance = 16.0
+pitch_degrees = 40.0
+yaw_degrees = 225.0
+ortho_size = 13.0
+
+[node name="Map" parent="." instance=ExtResource("1_cueva")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="DimLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.5, -0.5, 0.7, 0, 0.81, 0.58, -0.86, -0.29, 0.41, 0, 6, 0)
+light_color = Color(0.45, 0.55, 0.8, 1)
+light_energy = 0.4
+shadow_enabled = true
+
+[node name="TorchLight1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2.0, -3)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.8
+omni_range = 6.0
+
+[node name="TorchLight2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2.0, -3)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.8
+omni_range = 6.0
+
+[node name="TorchLight3" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2.0, 3)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.8
+omni_range = 6.0
+
+[node name="TorchLight4" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2.0, 3)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.8
+omni_range = 6.0
+
+[node name="GroundBody" type="StaticBody3D" parent="."]
+
+[node name="GroundCol" type="CollisionShape3D" parent="GroundBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Box_ground")
+
+[node name="WallN" type="StaticBody3D" parent="."]
+
+[node name="WallNCol" type="CollisionShape3D" parent="WallN"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.5)
+shape = SubResource("Box_wall_N")
+
+[node name="WallL" type="StaticBody3D" parent="."]
+
+[node name="WallLCol" type="CollisionShape3D" parent="WallL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 0)
+shape = SubResource("Box_wall_L")
+
+[node name="WallR" type="StaticBody3D" parent="."]
+
+[node name="WallRCol" type="CollisionShape3D" parent="WallR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, 0)
+shape = SubResource("Box_wall_R")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 5)
+
+[node name="PortalSalir" parent="." instance=ExtResource("3_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 6)
+portal_id = "salir_cueva"
+target_scene = "res://scenes/world/3d/sendero_bosque_3d.tscn"
+target_portal_id = "ir_cueva"
+prompt_text = "Salir de la cueva"
+
+[node name="ZonaEncuentros" parent="." instance=ExtResource("4_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+encounter_table = ExtResource("5_table")
+zone_size = Vector3(14, 2, 10)
+
+[node name="MurcielagoVisible" parent="." instance=ExtResource("6_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 0)
+enemies = Array[Resource]([ExtResource("7_bat")])
+wander_radius = 2.0
+wander_speed = 1.6
+
+[node name="EsqueletoVisible" parent="." instance=ExtResource("6_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, 0)
+enemies = Array[Resource]([ExtResource("8_sk")])
+wander_radius = 2.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+projection = 1
+current = true
+size = 13.0
+near = 0.1
+far = 60.0

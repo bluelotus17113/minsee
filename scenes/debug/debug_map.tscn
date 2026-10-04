@@ -1,0 +1,239 @@
+[gd_scene load_steps=22 format=3 uid="uid://b1minseedebug3d"]
+
+[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseenpc3d" path="res://scenes/world/3d/npc_3d.tscn" id="2_npc"]
+[ext_resource type="Resource" path="res://data/npcs/aldeano.tres" id="3_dlg"]
+[ext_resource type="Resource" path="res://data/npcs/mercader.tres" id="4_shop"]
+[ext_resource type="Resource" path="res://data/npcs/posadero.tres" id="5_inn"]
+[ext_resource type="Resource" path="res://data/npcs/lia_reclutadora.tres" id="6_recruit"]
+[ext_resource type="Resource" path="res://data/npcs/aldeano_quest.tres" id="7_quest"]
+[ext_resource type="PackedScene" uid="uid://b1minseechest3d" path="res://scenes/world/3d/chest_3d.tscn" id="8_chest"]
+[ext_resource type="Resource" path="res://data/chests/cofre_pociones.tres" id="9_chestdata"]
+[ext_resource type="PackedScene" uid="uid://b1minseeevent3d" path="res://scenes/world/3d/one_shot_event_3d.tscn" id="10_event"]
+[ext_resource type="Resource" path="res://data/events/debug_evento.tres" id="11_eventdata"]
+[ext_resource type="PackedScene" uid="uid://b1minseezone3d" path="res://scenes/world/3d/random_encounter_zone_3d.tscn" id="12_zone"]
+[ext_resource type="Resource" path="res://data/encounter_tables/campo_inicial.tres" id="13_table"]
+[ext_resource type="PackedScene" uid="uid://b1minseeenemyow3d" path="res://scenes/world/3d/enemy_overworld_3d.tscn" id="14_enemy"]
+[ext_resource type="Resource" path="res://data/enemies/slime.tres" id="15_slime"]
+[ext_resource type="Resource" path="res://data/enemies/goblin_boss.tres" id="16_boss"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal3d" path="res://scenes/world/3d/portal_node_3d.tscn" id="17_portal"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_proc"]
+sky_horizon_color = Color(0.5, 0.6, 0.75, 1)
+ground_horizon_color = Color(0.2, 0.3, 0.2, 1)
+sun_angle_max = 30.0
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("Sky_proc")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.85, 0.9, 1, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="Box_floor"]
+size = Vector3(40, 0.2, 30)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+size = Vector2(40, 30)
+
+[sub_resource type="StandardMaterial3D" id="Mat_floor"]
+albedo_color = Color(0.4, 0.55, 0.32, 1)
+roughness = 0.95
+
+[node name="DebugMap" type="Node3D"]
+script = ExtResource("0_setup")
+target_offset = Vector3(0, 0.8, 0)
+distance = 18.0
+pitch_degrees = 38.0
+yaw_degrees = 225.0
+ortho_size = 16.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819, -0.487, 0.301, 0, 0.526, 0.851, -0.574, -0.697, 0.43, 0, 6, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 2.8
+shadow_enabled = true
+
+[node name="Title" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -10)
+billboard = 1
+text = "═ DEBUG MAP ═
+Prueba aquí todas las interacciones"
+font_size = 96
+outline_size = 16
+modulate = Color(1, 0.85, 0.4, 1)
+
+[node name="FloorMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_floor")
+surface_material_override/0 = SubResource("Mat_floor")
+
+[node name="FloorBody" type="StaticBody3D" parent="."]
+
+[node name="FloorCol" type="CollisionShape3D" parent="FloorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Box_floor")
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+projection = 1
+current = true
+size = 16.0
+near = 0.1
+far = 80.0
+
+[node name="Label_NPC_Dialogue" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2.3, -6)
+billboard = 1
+text = "Diálogo"
+font_size = 56
+outline_size = 12
+modulate = Color(0.6, 0.85, 1, 1)
+
+[node name="NPC_Dialogue" parent="." instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.1, -6)
+npc_data = ExtResource("3_dlg")
+
+[node name="Label_NPC_Shop" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.3, -6)
+billboard = 1
+text = "Tienda"
+font_size = 56
+outline_size = 12
+modulate = Color(0.6, 0.85, 1, 1)
+
+[node name="NPC_Shop" parent="." instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, -6)
+npc_data = ExtResource("4_shop")
+
+[node name="Label_NPC_Inn" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -6)
+billboard = 1
+text = "Posada"
+font_size = 56
+outline_size = 12
+modulate = Color(0.6, 0.85, 1, 1)
+
+[node name="NPC_Inn" parent="." instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -6)
+npc_data = ExtResource("5_inn")
+
+[node name="Label_NPC_Recruit" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.3, -6)
+billboard = 1
+text = "Reclutar"
+font_size = 56
+outline_size = 12
+modulate = Color(0.6, 0.85, 1, 1)
+
+[node name="NPC_Recruit" parent="." instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, -6)
+npc_data = ExtResource("6_recruit")
+
+[node name="Label_NPC_Quest" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.3, -6)
+billboard = 1
+text = "Quest"
+font_size = 56
+outline_size = 12
+modulate = Color(0.6, 0.85, 1, 1)
+
+[node name="NPC_Quest" parent="." instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, -6)
+npc_data = ExtResource("7_quest")
+
+[node name="Label_Chest" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.3, 4)
+billboard = 1
+text = "Cofre"
+font_size = 56
+outline_size = 12
+modulate = Color(1, 0.8, 0.4, 1)
+
+[node name="Cofre" parent="." instance=ExtResource("8_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, 4)
+chest_data = ExtResource("9_chestdata")
+
+[node name="Label_Event" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2.3, 4)
+billboard = 1
+text = "Evento (+200 oro)"
+font_size = 56
+outline_size = 12
+modulate = Color(0.9, 0.5, 1, 1)
+
+[node name="Evento" parent="." instance=ExtResource("10_event")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 4)
+event_data = ExtResource("11_eventdata")
+
+[node name="Label_Enemy" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2.3, 4)
+billboard = 1
+text = "Slime visible"
+font_size = 56
+outline_size = 12
+modulate = Color(1, 0.5, 0.5, 1)
+
+[node name="EnemigoVisible" parent="." instance=ExtResource("14_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, 4)
+enemies = Array[Resource]([ExtResource("15_slime")])
+wander_radius = 1.5
+
+[node name="Label_Boss" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.3, 4)
+billboard = 1
+text = "JEFE Goblin Rey"
+font_size = 56
+outline_size = 12
+modulate = Color(1, 0.4, 0.4, 1)
+
+[node name="EnemigoJefe" parent="." instance=ExtResource("14_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, 4)
+enemies = Array[Resource]([ExtResource("16_boss")])
+wander_radius = 1.0
+
+[node name="Label_Zone" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 10)
+billboard = 1
+text = "Zona de encuentros aleatorios"
+font_size = 48
+outline_size = 12
+modulate = Color(0.5, 1, 0.6, 1)
+
+[node name="ZonaEncuentros" parent="." instance=ExtResource("12_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 10)
+encounter_table = ExtResource("13_table")
+zone_size = Vector3(20, 2, 6)
+
+[node name="Label_Portal" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2.3, 0)
+billboard = 1
+text = "Portal → Patio"
+font_size = 56
+outline_size = 12
+modulate = Color(0.4, 0.85, 1, 1)
+
+[node name="PortalPatio" parent="." instance=ExtResource("17_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.05, 0)
+portal_id = "debug_a_patio"
+target_scene = "res://scenes/world/3d/patio_pueblo_3d.tscn"
+target_portal_id = ""
+prompt_text = "Ir al patio"
+
+[node name="Label_Hint" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 12)
+billboard = 1
+text = "WASD = mover  ·  E = interactuar  ·  Enter = menú
+Z/X = girar cámara  ·  Rueda = zoom  ·  Esc = salir"
+font_size = 40
+outline_size = 8
+modulate = Color(0.85, 0.85, 0.85, 1)

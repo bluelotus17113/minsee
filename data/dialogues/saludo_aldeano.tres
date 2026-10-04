@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DialogueData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_data.gd" id="1_dlg"]
+
+[resource]
+script = ExtResource("1_dlg")
+dialogue_id = "saludo_aldeano"
+speaker_name = "Aldeano"
+lines = PackedStringArray("¡Bienvenido, viajero!", "Hace tiempo que no veo a nadie por aquí.", "Cuídate de los slimes... y de los goblins también.")

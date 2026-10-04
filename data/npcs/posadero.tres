@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="NPCData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="1_npc"]
+[ext_resource type="Texture2D" path="res://sprites/characters/npcs/posadero.png" id="2_sprite"]
+
+[resource]
+script = ExtResource("1_npc")
+npc_name = "Posadero"
+description = "Ofrece descanso por unas monedas."
+type = 2
+sprite = ExtResource("2_sprite")
+sprite_size = 32
+color = Color(0.5, 0.85, 0.7, 1)
+inn_cost = 30
+inn_prompt = "Una noche cuesta %d oro. ¿Aceptas?"
+inn_success = "Has dormido bien. HP y MP restaurados."
+inn_no_gold = "Vuelve cuando tengas más oro."

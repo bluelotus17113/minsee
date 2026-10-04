@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://b1minseeplayer3d"]
+
+[ext_resource type="Script" path="res://scripts/world/player_3d.gd" id="1_player3d"]
+[ext_resource type="Texture2D" path="res://sprites/characters/min/min_overworld.png" id="2_sprite"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_p"]
+radius = 0.3
+height = 1.1
+
+[node name="Player3D" type="CharacterBody3D" groups=["player"]]
+collision_layer = 3
+collision_mask = 1
+script = ExtResource("1_player3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("CapsuleShape3D_p")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+billboard = 1
+texture_filter = 0
+pixel_size = 0.04
+texture = ExtResource("2_sprite")

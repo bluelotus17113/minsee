@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DialogueData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_data.gd" id="1_dlg"]
+
+[resource]
+script = ExtResource("1_dlg")
+dialogue_id = "encuentro_misterioso"
+speaker_name = "???"
+lines = PackedStringArray("Una sombra cruza el sendero.", "Algo se mueve entre la hierba alta...")

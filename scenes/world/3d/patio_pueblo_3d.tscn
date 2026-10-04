@@ -1,0 +1,107 @@
+[gd_scene load_steps=14 format=3 uid="uid://b1minseepatio3d"]
+
+[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="PackedScene" path="res://scenes/world/3d/patio_pueblo.glb" id="1_patio"]
+[ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://b1minseenpc3d" path="res://scenes/world/3d/npc_3d.tscn" id="3_npc"]
+[ext_resource type="Resource" path="res://data/npcs/mercader.tres" id="4_mercader"]
+[ext_resource type="Resource" path="res://data/npcs/posadero.tres" id="5_posadero"]
+[ext_resource type="PackedScene" uid="uid://b1minseeportal3d" path="res://scenes/world/3d/portal_node_3d.tscn" id="6_portal"]
+[ext_resource type="PackedScene" uid="uid://b1minseezone3d" path="res://scenes/world/3d/random_encounter_zone_3d.tscn" id="7_zone"]
+[ext_resource type="Resource" path="res://data/encounter_tables/campo_inicial.tres" id="8_table"]
+[ext_resource type="PackedScene" uid="uid://b1minseechest3d" path="res://scenes/world/3d/chest_3d.tscn" id="9_chest"]
+[ext_resource type="Resource" path="res://data/chests/cofre_pociones.tres" id="10_chestdata"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_proc_p"]
+sky_horizon_color = Color(0.55, 0.7, 0.85, 1)
+ground_horizon_color = Color(0.25, 0.4, 0.25, 1)
+sun_angle_max = 30.0
+
+[sub_resource type="Sky" id="Sky_patio"]
+sky_material = SubResource("Sky_proc_p")
+
+[sub_resource type="Environment" id="Env_patio"]
+background_mode = 2
+sky = SubResource("Sky_patio")
+ambient_light_source = 3
+ambient_light_color = Color(0.85, 0.9, 1, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="Box_ground"]
+size = Vector3(14, 0.2, 14)
+
+[sub_resource type="BoxShape3D" id="Box_house"]
+size = Vector3(7, 2.4, 2.2)
+
+[node name="Patio3D" type="Node3D"]
+script = ExtResource("0_setup")
+target_offset = Vector3(0, 0.8, 0)
+distance = 16.0
+pitch_degrees = 38.0
+yaw_degrees = 225.0
+ortho_size = 13.0
+
+[node name="Map" parent="." instance=ExtResource("1_patio")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_patio")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819, -0.487, 0.301, 0, 0.526, 0.851, -0.574, -0.697, 0.43, 0, 6, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 3
+shadow_enabled = true
+
+[node name="GroundBody" type="StaticBody3D" parent="."]
+
+[node name="GroundCol" type="CollisionShape3D" parent="GroundBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Box_ground")
+
+[node name="HouseCollider" type="StaticBody3D" parent="."]
+
+[node name="HouseCol" type="CollisionShape3D" parent="HouseCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 6.5)
+shape = SubResource("Box_house")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -3)
+
+[node name="Mercader" parent="." instance=ExtResource("3_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 2)
+npc_data = ExtResource("4_mercader")
+
+[node name="Posadero" parent="." instance=ExtResource("3_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.1, 0)
+npc_data = ExtResource("5_posadero")
+
+[node name="Cofre" parent="." instance=ExtResource("9_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, -2.5)
+chest_data = ExtResource("10_chestdata")
+
+[node name="PortalToInterior" parent="." instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3.5)
+portal_id = "entrada_casa"
+target_scene = "res://scenes/world/3d/interior_casa_3d.tscn"
+target_portal_id = "puerta_interior"
+prompt_text = "Entrar a la casa"
+
+[node name="ZonaEncuentros" parent="." instance=ExtResource("7_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+encounter_table = ExtResource("8_table")
+zone_size = Vector3(10, 2, 6)
+
+[node name="PortalAlSendero" parent="." instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.05, -3)
+portal_id = "ir_sendero"
+target_scene = "res://scenes/world/3d/sendero_bosque_3d.tscn"
+target_portal_id = "vuelta_patio"
+prompt_text = "Ir al sendero"
+
+[node name="Camera3D" type="Camera3D" parent="."]
+projection = 1
+current = true
+size = 13.0
+near = 0.1
+far = 60.0

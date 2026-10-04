@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemyscript"]
+[ext_resource type="Texture2D" path="res://sprites/characters/goblin_boss/goblin_boss.png" id="2_sprite"]
+[ext_resource type="Resource" path="res://data/skills/fireball.tres" id="3_fireball"]
+
+[resource]
+script = ExtResource("1_enemyscript")
+enemy_name = "Goblin Rey"
+description = "Jefe goblin con armadura roja. Mucho HP y dos turnos seguidos."
+sprite = ExtResource("2_sprite")
+sprite_size = 32
+color = Color(0.85, 0.3, 0.3, 1)
+max_hp = 220
+max_mp = 60
+max_cp = 200
+attack = 18
+defense = 12
+magic = 14
+speed = 10
+luck = 6
+move_range = 3
+melee_range = 1
+weaknesses_flags = 4
+resistances_flags = 2
+break_threshold = 180
+exp_reward = 80
+gold_reward = 120
+skills = Array[Resource]([ExtResource("3_fireball")])
+skill_use_chance = 0.5

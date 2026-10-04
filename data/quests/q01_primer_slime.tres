@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_data.gd" id="1_quest"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="2_potion"]
+
+[resource]
+script = ExtResource("1_quest")
+quest_id = "q01_primer_slime"
+title = "El primer slime"
+description = "El aldeano necesita pruebas de que sabes pelear. Derrota a un slime y vuelve."
+objectives = PackedStringArray("Derrota a un slime", "Habla con el aldeano de nuevo")
+reward_gold = 60
+reward_items = Array[Resource]([ExtResource("2_potion")])
+reward_exp = 20
