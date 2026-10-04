@@ -12,3 +12,7 @@ build/
 # Sistema
 .DS_Store
 *~
+
+# Python de los generadores de Tools/
+__pycache__/
+*.pyc

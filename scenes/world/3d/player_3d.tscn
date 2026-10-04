@@ -1,7 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://b1minseeplayer3d"]
+[gd_scene load_steps=6 format=3 uid="uid://b1minseeplayer3d"]
 
 [ext_resource type="Script" path="res://scripts/world/player_3d.gd" id="1_player3d"]
-[ext_resource type="Texture2D" path="res://sprites/characters/min/min_overworld.png" id="2_sprite"]
+[ext_resource type="Script" path="res://scripts/world/toon_skin.gd" id="2_toon"]
+[ext_resource type="PackedScene" path="res://scenes/world/3d/chars/min.glb" id="3_model"]
+[ext_resource type="Script" path="res://scripts/world/third_person_camera.gd" id="4_camrig"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_p"]
 radius = 0.3
@@ -11,14 +13,28 @@ height = 1.1
 collision_layer = 3
 collision_mask = 1
 script = ExtResource("1_player3d")
+camera_path = NodePath("CamRig/SpringArm3D/Camera3D")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 shape = SubResource("CapsuleShape3D_p")
 
-[node name="Sprite3D" type="Sprite3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-billboard = 1
-texture_filter = 0
-pixel_size = 0.04
-texture = ExtResource("2_sprite")
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_toon")
+
+[node name="Min" parent="Model" instance=ExtResource("3_model")]
+
+[node name="CamRig" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+script = ExtResource("4_camrig")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CamRig"]
+spring_length = 3.8
+margin = 0.25
+collision_mask = 1
+
+[node name="Camera3D" type="Camera3D" parent="CamRig/SpringArm3D"]
+current = true
+fov = 60.0
+near = 0.08
+far = 200.0

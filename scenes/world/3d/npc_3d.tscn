@@ -17,12 +17,7 @@ script = ExtResource("1_npc3d")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 shape = SubResource("CylinderShape3D_npc")
 
-[node name="Sprite3D" type="Sprite3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-billboard = 1
-texture_filter = 0
-pixel_size = 0.04
-modulate = Color(0.9, 0.85, 0.5, 1)
+[node name="Model" type="Node3D" parent="."]
 
 [node name="Prompt" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)

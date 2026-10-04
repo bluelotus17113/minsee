@@ -1,6 +1,6 @@
 [gd_scene load_steps=13 format=3 uid="uid://b1minseesendero3d"]
 
-[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="Script" path="res://scripts/world/world_root.gd" id="0_setup"]
 [ext_resource type="PackedScene" path="res://scenes/world/3d/sendero_bosque.glb" id="1_sendero"]
 [ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://b1minseeportal3d" path="res://scenes/world/3d/portal_node_3d.tscn" id="3_portal"]
@@ -31,11 +31,6 @@ size = Vector3(20, 0.2, 14)
 
 [node name="Sendero3D" type="Node3D"]
 script = ExtResource("0_setup")
-target_offset = Vector3(0, 0.8, 0)
-distance = 18.0
-pitch_degrees = 38.0
-yaw_degrees = 225.0
-ortho_size = 14.0
 
 [node name="Map" parent="." instance=ExtResource("1_sendero")]
 
@@ -85,10 +80,3 @@ wander_radius = 2.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, 3)
 enemies = Array[Resource]([ExtResource("8_gob")])
 wander_radius = 2.5
-
-[node name="Camera3D" type="Camera3D" parent="."]
-projection = 1
-current = true
-size = 14.0
-near = 0.1
-far = 60.0

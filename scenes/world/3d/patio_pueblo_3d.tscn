@@ -1,6 +1,6 @@
 [gd_scene load_steps=14 format=3 uid="uid://b1minseepatio3d"]
 
-[ext_resource type="Script" path="res://scripts/world/iso_camera_setup.gd" id="0_setup"]
+[ext_resource type="Script" path="res://scripts/world/world_root.gd" id="0_setup"]
 [ext_resource type="PackedScene" path="res://scenes/world/3d/patio_pueblo.glb" id="1_patio"]
 [ext_resource type="PackedScene" uid="uid://b1minseeplayer3d" path="res://scenes/world/3d/player_3d.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://b1minseenpc3d" path="res://scenes/world/3d/npc_3d.tscn" id="3_npc"]
@@ -36,11 +36,6 @@ size = Vector3(7, 2.4, 2.2)
 
 [node name="Patio3D" type="Node3D"]
 script = ExtResource("0_setup")
-target_offset = Vector3(0, 0.8, 0)
-distance = 16.0
-pitch_degrees = 38.0
-yaw_degrees = 225.0
-ortho_size = 13.0
 
 [node name="Map" parent="." instance=ExtResource("1_patio")]
 
@@ -98,10 +93,3 @@ portal_id = "ir_sendero"
 target_scene = "res://scenes/world/3d/sendero_bosque_3d.tscn"
 target_portal_id = "vuelta_patio"
 prompt_text = "Ir al sendero"
-
-[node name="Camera3D" type="Camera3D" parent="."]
-projection = 1
-current = true
-size = 13.0
-near = 0.1
-far = 60.0

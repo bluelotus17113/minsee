@@ -2,6 +2,8 @@
 extends Area3D
 
 const SHOP_UI := "res://scenes/shop/shop_ui.tscn"
+## Si un NPCData no trae modelo se usa éste, para que no quede invisible.
+const FALLBACK_MODEL := "res://scenes/world/3d/chars/aldeano.glb"
 const INN_UI := "res://scenes/shop/inn_ui.tscn"
 const RECRUIT_UI := "res://scenes/shop/recruit_ui.tscn"
 
@@ -25,14 +27,46 @@ func _ready() -> void:
 	$Prompt.visible = false
 
 func _refresh_visual() -> void:
-	var sprite := get_node_or_null("Sprite3D") as Sprite3D
-	if sprite == null: return
-	if npc_data and npc_data.sprite:
-		sprite.texture = npc_data.sprite
-		sprite.pixel_size = 0.04 if npc_data.sprite_size <= 32 else 0.025
-		sprite.modulate = Color.WHITE
-	else:
-		sprite.modulate = npc_data.color if npc_data else Color(0.9, 0.85, 0.5)
+	var holder := get_node_or_null("Model") as Node3D
+	if holder == null:
+		push_warning("npc_3d: falta el nodo Model; el NPC se quedaría invisible.")
+		return
+	for child in holder.get_children():
+		child.queue_free()
+		holder.remove_child(child)
+
+	var packed: PackedScene = npc_data.model if npc_data else null
+	if packed == null:
+		# Sin modelo el NPC sería un área invisible con la que se puede hablar:
+		# un fallo que no da error y no se ve hasta jugar.
+		push_warning("npc_3d: %s no tiene modelo, se usa el de reserva." %
+			(npc_data.npc_name if npc_data else "(sin datos)"))
+		packed = load(FALLBACK_MODEL)
+	if packed == null:
+		return
+
+	var inst := packed.instantiate()
+	holder.add_child(inst)
+	if Engine.is_editor_hint():
+		inst.owner = get_tree().edited_scene_root
+	ToonSkin.skin(inst)
+	var anim := _find_anim(inst)
+	if anim:
+		for name in anim.get_animation_list():
+			var a := anim.get_animation(name)
+			if a:
+				a.loop_mode = Animation.LOOP_LINEAR
+		if anim.has_animation("idle"):
+			anim.play("idle")
+
+func _find_anim(root: Node) -> AnimationPlayer:
+	if root is AnimationPlayer:
+		return root
+	for child in root.get_children():
+		var found := _find_anim(child)
+		if found:
+			return found
+	return null
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):

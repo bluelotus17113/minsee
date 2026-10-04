@@ -1,12 +1,15 @@
-[gd_resource type="Resource" script_class="NPCData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="NPCData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="1_npc"]
 [ext_resource type="Resource" path="res://data/dialogues/saludo_aldeano.tres" id="2_dlg1"]
 [ext_resource type="Resource" path="res://data/dialogues/saludo_aldeano_repetido.tres" id="3_dlg2"]
 [ext_resource type="Texture2D" path="res://sprites/characters/npcs/aldeano.png" id="4_sprite"]
 
+[ext_resource type="PackedScene" path="res://scenes/world/3d/chars/aldeano.glb" id="99_model"]
+
 [resource]
 script = ExtResource("1_npc")
+model = ExtResource("99_model")
 npc_name = "Aldeano"
 description = "Un aldeano amable."
 sprite = ExtResource("4_sprite")

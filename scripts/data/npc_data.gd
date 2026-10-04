@@ -8,6 +8,13 @@ enum NPCType { DIALOGUE, SHOP, INN, QUEST, RECRUIT }
 @export_multiline var description: String = ""
 @export var type: NPCType = NPCType.DIALOGUE
 @export var portrait: Texture2D
+## Modelo 3D del NPC (.glb de scenes/world/3d/chars/). Es lo que se ve en el
+## mundo desde el giro a 3D.
+@export var model: PackedScene
+
+@export_group("Legado 2D")
+## Los cuatro de abajo son del enfoque pixel art anterior. Siguen aquí porque
+## scenes/world/*.tscn (las escenas 2D) todavía los leen.
 @export var sprite: Texture2D
 @export var animations: SpriteFrames
 @export var default_animation: String = "idle"
