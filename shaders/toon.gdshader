@@ -12,9 +12,12 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
 uniform bool use_texture = false;
 
 group_uniforms sombreado;
-// Cuántos escalones de luz. 2 = plano de cel, 3 = lo habitual en anime, 4+ = suave.
-uniform int bands : hint_range(2, 5) = 3;
-uniform float band_softness : hint_range(0.0, 0.5) = 0.05;
+// Cuántos escalones de luz. En cel shading de verdad son pocos y con el canto
+// duro: 2 es el cel clásico (luz y sombra), 3 añade un medio tono.
+uniform int bands : hint_range(2, 5) = 2;
+// Casi cero: lo justo para que el canto no se sierre al girar la cámara. Con
+// 0.05 el degradado se nota y deja de leerse como tinta plana.
+uniform float band_softness : hint_range(0.0, 0.5) = 0.012;
 // La sombra no es negra: en anime se tiñe de frío. Esto es lo que más vende el estilo.
 uniform vec4 shadow_tint : source_color = vec4(0.46, 0.5, 0.72, 1.0);
 // Con la ambiental desactivada, la luz directa puede ir a 1.0 sin quemar.
@@ -52,7 +55,8 @@ void fragment() {
 
 	// Luz de borde: no depende de la luz de la escena, va como emisión.
 	float rim = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
-	rim = smoothstep(1.0 - rim_width, 1.0, rim);
+	// Canto duro, como el resto: un degradado aquí rompe la lectura de tinta.
+	rim = smoothstep(1.0 - rim_width, 1.0 - rim_width + 0.06, rim);
 	EMISSION = rim_color.rgb * rim * rim_strength;
 }
 
@@ -71,6 +75,6 @@ void light() {
 	// Brillo de un solo escalón, nada de degradado.
 	vec3 half_vec = normalize(normalize(LIGHT) + normalize(VIEW));
 	float spec = pow(max(dot(normalize(NORMAL), half_vec), 0.0), specular_sharpness);
-	spec = smoothstep(specular_threshold - 0.03, specular_threshold + 0.03, spec);
+	spec = smoothstep(specular_threshold - 0.008, specular_threshold + 0.008, spec);
 	SPECULAR_LIGHT += spec * specular_strength * LIGHT_COLOR.rgb * ATTENUATION / PI;
 }

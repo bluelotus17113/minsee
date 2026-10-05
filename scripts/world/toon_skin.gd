@@ -16,11 +16,11 @@ const TOON_SHADER: Shader = preload("res://shaders/toon.gdshader")
 const OUTLINE_SHADER: Shader = preload("res://shaders/toon_outline.gdshader")
 
 @export_group("Sombreado")
-@export_range(2, 5) var bands: int = 3:
+@export_range(2, 5) var bands: int = 2:
 	set(v):
 		bands = v
 		_refresh()
-@export_range(0.0, 0.5) var band_softness: float = 0.05:
+@export_range(0.0, 0.5) var band_softness: float = 0.012:
 	set(v):
 		band_softness = v
 		_refresh()
@@ -50,7 +50,7 @@ const OUTLINE_SHADER: Shader = preload("res://shaders/toon_outline.gdshader")
 	set(v):
 		outline_color = v
 		_refresh()
-@export_range(0.0, 0.02) var outline_width: float = 0.006:
+@export_range(0.0, 0.02) var outline_width: float = 0.011:
 	set(v):
 		outline_width = v
 		_refresh()
@@ -77,10 +77,10 @@ func apply_to(root: Node) -> int:
 
 ## Versión estática con los valores por defecto, para modelos instanciados
 ## desde código.
-static func skin(root: Node, width: float = 0.006) -> int:
+static func skin(root: Node, width: float = 0.011) -> int:
 	var cfg := {
-		"bands": 3,
-		"band_softness": 0.05,
+		"bands": 2,
+		"band_softness": 0.012,
 		"shadow_tint": Color(0.46, 0.5, 0.72),
 		"rim_color": Color(1.0, 0.97, 0.9),
 		"rim_strength": 0.5,
