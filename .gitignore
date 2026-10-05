@@ -16,3 +16,7 @@ build/
 # Python de los generadores de Tools/
 __pycache__/
 *.pyc
+
+# Copias de seguridad de Blender
+*.blend1
+*.blend2
