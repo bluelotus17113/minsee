@@ -2,19 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d01itbym1u8bo"
-path="res://.godot/imported/lia_lia.png-d7c04a6bd14a25cb0ce0a3ed4366c59c.ctex"
+uid="uid://deiihg1mqbhua"
+path="res://.godot/imported/skeleton.png-068e36ff7e36d97f7e0c538557959211.ctex"
 metadata={
 "vram_texture": false
-}
-generator_parameters={
-"md5": "c059c7f94dd3072ffacbe140794c8194"
 }
 
 [deps]
 
-source_file="res://scenes/world/3d/chars/lia_lia.png"
-dest_files=["res://.godot/imported/lia_lia.png-d7c04a6bd14a25cb0ce0a3ed4366c59c.ctex"]
+source_file="res://scenes/world/3d/chars/faces/skeleton.png"
+dest_files=["res://.godot/imported/skeleton.png-068e36ff7e36d97f7e0c538557959211.ctex"]
 
 [params]
 
@@ -26,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

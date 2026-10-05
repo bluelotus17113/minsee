@@ -1,10 +1,13 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemyscript"]
 [ext_resource type="Resource" path="res://data/skills/fireball.tres" id="2_fb"]
 
+[ext_resource type="PackedScene" path="res://scenes/world/3d/chars/goblin.glb" id="98_model"]
+
 [resource]
 script = ExtResource("1_enemyscript")
+model = ExtResource("98_model")
 enemy_name = "Goblin Pirómano"
 description = "Pequeño y agresivo. Usa fuego."
 color = Color(0.78, 0.32, 0.17, 1)

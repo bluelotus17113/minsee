@@ -1,6 +1,6 @@
 extends Node
 
-const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
+const BATTLE_SCENE := "res://scenes/battle/battle_3d.tscn"
 
 signal battle_finished(victory: bool)
 

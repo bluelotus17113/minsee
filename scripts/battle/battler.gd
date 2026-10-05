@@ -29,6 +29,7 @@ var move_range: int = 3
 var melee_range: int = 1
 var grid_pos: Vector2i = Vector2i(-999, -999)
 var color: Color = Color.WHITE
+var model: PackedScene = null
 var sprite: Texture2D = null
 var animations: SpriteFrames = null
 var default_animation: String = "idle"
@@ -78,6 +79,7 @@ static func from_actor(stats: ActorStats) -> Battler:
 	b.move_range = stats.move_range
 	b.melee_range = stats.melee_range
 	b.color = stats.color
+	b.model = stats.model
 	b.sprite = stats.sprite
 	b.animations = stats.animations
 	b.default_animation = stats.default_animation
@@ -108,6 +110,7 @@ static func from_enemy(data: EnemyData) -> Battler:
 	b.move_range = data.move_range
 	b.melee_range = data.melee_range
 	b.color = data.color
+	b.model = data.model
 	b.sprite = data.sprite
 	b.animations = data.animations
 	b.default_animation = data.default_animation

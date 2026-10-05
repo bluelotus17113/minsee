@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ActorStats" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="ActorStats" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/actor_stats.gd" id="1_actorscript"]
 [ext_resource type="Resource" path="res://data/weapons/sword_basic.tres" id="2_weapon"]
@@ -10,8 +10,11 @@
 [ext_resource type="Resource" path="res://data/skill_trees/min_tree.tres" id="8_tree"]
 [ext_resource type="Texture2D" path="res://sprites/characters/min/min_overworld.png" id="9_sprite"]
 
+[ext_resource type="PackedScene" path="res://scenes/world/3d/chars/min.glb" id="98_model"]
+
 [resource]
 script = ExtResource("1_actorscript")
+model = ExtResource("98_model")
 actor_name = "Min"
 sprite = ExtResource("9_sprite")
 sprite_size = 32

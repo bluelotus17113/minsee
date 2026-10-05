@@ -20,7 +20,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chars_spec import CHARS, rgb255, shade  # noqa: E402
+from chars_spec import TODOS as CHARS, rgb255, shade  # noqa: E402
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "scenes" / "world" / "3d" / "chars" / "faces"
 
@@ -61,14 +61,40 @@ def _mask(size, box):
     return m
 
 
-def draw_eye(layer, cx, cy, eye_rgb, lash_rgb, outward):
+def draw_socket(layer, cx, cy, lash_rgb, outward=1):
+    """Cuenca vacía de un cráneo: un agujero, no un ojo."""
+    d = ImageDraw.Draw(layer)
+    w, h = EYE_W * 1.30, EYE_H * 1.15
+    hueco = (*rgb255(shade(lash_rgb, 0.30)), 255)
+    d.ellipse(_ellipse(cx, cy, w, h), fill=hueco)
+    # Lagrimal: una muesca corta hacia dentro y abajo, sin llegar al centro.
+    d.polygon([
+        (cx - outward * w * 0.40, cy + h * 0.02),
+        (cx - outward * w * 0.40, cy + h * 0.30),
+        (cx - outward * w * 0.56, cy + h * 0.44),
+    ], fill=hueco)
+    # Un punto de luz al fondo, para que no sea un agujero muerto.
+    glow = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse(_ellipse(cx, cy + h * 0.10, w * 0.34, h * 0.30),
+                                 fill=(120, 210, 255, 210))
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=w * 0.09))
+    _clip_over(layer, glow, _mask(layer.size, _ellipse(cx, cy, w, h)))
+
+
+def draw_eye(layer, cx, cy, eye_rgb, lash_rgb, outward, mood="amable"):
     """Un ojo anime: blanco a los lados, iris alto, pestaña en media luna.
 
     `outward` es +1 o -1 y dice hacia dónde cae el rabillo del ojo.
     """
+    if mood == "craneo":
+        draw_socket(layer, cx, cy, lash_rgb, outward)
+        return
     d = ImageDraw.Draw(layer)
     w, h = EYE_W, EYE_H
     size = layer.size
+    if mood == "furioso":
+        # Ojo más bajo y estrecho: la mirada se cierra y se vuelve dura.
+        h *= 0.74
 
     # Esclerótica. El iris será más estrecho que ella: ese blanco a los lados
     # es lo que distingue un ojo de un botón.
@@ -127,18 +153,23 @@ def draw_brow(layer, cx, cy, hair_rgb, outward, mood):
     """Ceja de grosor variable: círculos a lo largo de una curva."""
     col = (*rgb255(shade(hair_rgb, 0.8)), 255)
     d = ImageDraw.Draw(layer)
-    tilt = {"decidido": 14, "pillo": 10, "dulce": -8, "amable": -2}.get(mood, 0)
-    half = EYE_W * 0.50
+    if mood == "craneo":
+        return  # un cráneo no tiene cejas
+    # En proporción al ojo, no en píxeles sueltos: el dibujo va a escala SS.
+    factor = {"decidido": 0.16, "pillo": 0.12, "dulce": -0.09, "amable": -0.03, "furioso": 0.40}.get(mood, 0.0)
+    tilt = EYE_H * factor
+    half = EYE_W * (0.56 if mood == "furioso" else 0.50)
     inner = (cx - outward * half, cy + tilt)
-    outer = (cx + outward * half, cy - tilt * 0.5)
-    peak = (cx + outward * half * 0.15, cy - EYE_H * 0.14)
+    outer = (cx + outward * half, cy - tilt * 0.45)
+    peak = (cx + outward * half * 0.15, cy - EYE_H * (0.06 if mood == "furioso" else 0.14))
     steps = 28
     for i in range(steps + 1):
         t = i / steps
         # Bézier cuadrática entre el extremo interior y el exterior.
         x = (1 - t) ** 2 * inner[0] + 2 * (1 - t) * t * peak[0] + t ** 2 * outer[0]
         y = (1 - t) ** 2 * inner[1] + 2 * (1 - t) * t * peak[1] + t ** 2 * outer[1]
-        r = EYE_H * (0.085 - 0.055 * t)  # gruesa por dentro, afilada por fuera
+        grosor = 0.115 if mood == "furioso" else 0.085
+        r = EYE_H * (grosor - grosor * 0.65 * t)  # gruesa por dentro, afilada por fuera
         d.ellipse([x - r, y - r, x + r, y + r], fill=col)
 
 
@@ -153,6 +184,36 @@ def draw_mouth(layer, mood, lash_rgb):
         d.arc([CX - w * 0.46, MOUTH_Y - 34, CX + w * 0.46, MOUTH_Y + 14], 35, 145, fill=col, width=t)
     elif mood == "pillo":
         d.arc([CX - w * 0.52, MOUTH_Y - 34, CX + w * 0.52, MOUTH_Y + 20], 18, 128, fill=col, width=t)
+    elif mood == "furioso":
+        # Boca hacia abajo y colmillos saliendo del labio inferior.
+        d.arc([CX - w * 0.56, MOUTH_Y - w * 0.04, CX + w * 0.56, MOUTH_Y + w * 0.42],
+              198, 342, fill=col, width=int(t * 1.4))
+        # Colmillos: suben desde el labio, no flotan.
+        for sx in (-1, 1):
+            bx = CX + sx * w * 0.34
+            d.polygon([(bx - w * 0.085, MOUTH_Y + w * 0.09), (bx + w * 0.085, MOUTH_Y + w * 0.09),
+                       (bx, MOUTH_Y - w * 0.22)], fill=(250, 248, 240, 255))
+    elif mood == "craneo":
+        hueco = (*rgb255(shade(lash_rgb, 0.30)), 255)
+        # Hueco nasal, a medio camino entre las cuencas y la boca.
+        nz = (EYE_Y + MOUTH_Y) * 0.5
+        d.polygon([(CX, nz - w * 0.30), (CX - w * 0.19, nz + w * 0.16), (CX + w * 0.19, nz + w * 0.16)], fill=hueco)
+        # La cavidad va primero y oscura: sobre hueso crema, un diente blanco
+        # sin fondo detrás es invisible.
+        half_w, half_h = w * 0.74, w * 0.30
+        d.rounded_rectangle([CX - half_w, MOUTH_Y - half_h, CX + half_w, MOUTH_Y + half_h],
+                            radius=w * 0.10, fill=hueco)
+        # Dientes como bloques sueltos dentro de la cavidad.
+        n = 9
+        paso = (half_w * 2.0) / n
+        hueco_diente = paso * 0.16
+        for i in range(n):
+            x0 = CX - half_w + i * paso + hueco_diente
+            x1 = x0 + paso - hueco_diente * 2.0
+            d.rectangle([x0, MOUTH_Y - half_h * 0.80, x1, MOUTH_Y - half_h * 0.06],
+                        fill=(246, 244, 236, 255))
+            d.rectangle([x0, MOUTH_Y + half_h * 0.12, x1, MOUTH_Y + half_h * 0.80],
+                        fill=(238, 235, 226, 255))
     else:  # amable
         d.arc([CX - w * 0.48, MOUTH_Y - 28, CX + w * 0.48, MOUTH_Y + 22], 28, 152, fill=col, width=t)
 
@@ -178,9 +239,10 @@ def build(char_id, spec):
     globals_backup = (CX, CY, EYE_DX, EYE_Y, EYE_W, EYE_H, BROW_Y, MOUTH_Y, BLUSH_DX, BLUSH_Y)
     _scale_globals(SS)
     try:
-        draw_blush(big, skin)
+        if spec["face"] not in ("craneo", "furioso"):
+            draw_blush(big, skin)
         for sx in (-1, 1):
-            draw_eye(big, CX + sx * EYE_DX, EYE_Y, spec["eyes"], lash, outward=sx)
+            draw_eye(big, CX + sx * EYE_DX, EYE_Y, spec["eyes"], lash, outward=sx, mood=spec["face"])
             draw_brow(big, CX + sx * EYE_DX, BROW_Y, spec["hair"], outward=sx, mood=spec["face"])
         draw_mouth(big, spec["face"], lash)
     finally:

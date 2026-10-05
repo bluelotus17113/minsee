@@ -14,11 +14,44 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var mode := args[0] if args.size() > 0 else "chars"
 	match mode:
+		"battle":
+			await _shoot_battle(args)
 		"scene":
 			await _shoot_scene(args)
 		_:
 			await _shoot_chars(args)
 	get_tree().quit()
+
+## Monta un combate de prueba: sin grupo ni enemigos la escena se arranca con
+## un slime por defecto y no se ve nada de lo que importa.
+func _shoot_battle(args: PackedStringArray) -> void:
+	var out: String = args[1] if args.size() > 1 else "user://battle.png"
+	var ids := PackedStringArray(["goblin", "skeleton", "goblin_boss"])
+	if args.size() > 2:
+		ids = args[2].split(",")
+	var frames: int = int(args[3]) if args.size() > 3 else 60
+
+	GameState.party.clear()
+	GameState.reserve.clear()
+	GameState.gold = 100
+	GameState._init_default_party()
+
+	var lista: Array[EnemyData] = []
+	for id in ids:
+		var data := load("res://data/enemies/%s.tres" % id) as EnemyData
+		if data == null:
+			push_error("No existe data/enemies/%s.tres" % id)
+			continue
+		lista.append(data)
+	GameState.pending_battle_enemies = lista
+
+	var packed: PackedScene = load("res://scenes/battle/battle_3d.tscn")
+	if packed == null:
+		push_error("No se pudo cargar battle_3d.tscn")
+		return
+	add_child(packed.instantiate())
+	await _wait(frames)
+	await _save(out)
 
 func _shoot_scene(args: PackedStringArray) -> void:
 	var target: String = args[1] if args.size() > 1 else "res://scenes/world/3d/patio_pueblo_3d.tscn"

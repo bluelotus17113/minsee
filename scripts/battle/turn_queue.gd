@@ -48,10 +48,15 @@ func plan() -> void:
 			"eta": best,
 		}
 		planned.append(slot)
-		chosen["v"] = float(chosen["v"]) - AT_THRESHOLD
-		while float(chosen["v"]) < 0.0:
-			chosen["v"] = float(chosen["v"]) + float((chosen["b"] as Battler).speed)
-		sim[picked_index] = chosen
+		# Pasa el tiempo para todos, no solo para quien actúa.
+		for i in sim.size():
+			var e: Dictionary = sim[i]
+			e["v"] = float(e["v"]) + float((e["b"] as Battler).speed) * best
+			sim[i] = e
+		# Y el que actúa gasta el umbral.
+		var usado: Dictionary = sim[picked_index]
+		usado["v"] = float(usado["v"]) - AT_THRESHOLD
+		sim[picked_index] = usado
 
 func _roll_bonus(slot_index: int) -> int:
 	if slot_index == 0:

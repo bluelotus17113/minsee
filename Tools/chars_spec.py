@@ -73,6 +73,48 @@ CHARS = {
     },
 }
 
+# Enemigos. Mismo generador: los humanoides solo cambian de ficha.
+ENEMIGOS = {
+    "skeleton": {
+        "skin": (0.90, 0.89, 0.82),
+        "hair": (0.62, 0.60, 0.54),
+        "shirt": (0.52, 0.50, 0.46),
+        "trim": (0.74, 0.72, 0.66),
+        "pants": (0.40, 0.39, 0.36),
+        "boots": (0.30, 0.29, 0.27),
+        "eyes": (0.08, 0.08, 0.10),
+        "hair_style": "calvo",
+        "face": "craneo",
+    },
+    "goblin": {
+        "ears": "puntiagudas",
+        "skin": (0.52, 0.70, 0.38),
+        "hair": (0.26, 0.20, 0.12),
+        "shirt": (0.56, 0.36, 0.22),
+        "trim": (0.74, 0.62, 0.34),
+        "pants": (0.34, 0.28, 0.20),
+        "boots": (0.26, 0.22, 0.16),
+        "eyes": (0.92, 0.72, 0.18),
+        "hair_style": "calvo",
+        "face": "furioso",
+    },
+    "goblin_boss": {
+        "ears": "puntiagudas",
+        "skin": (0.44, 0.62, 0.32),
+        "hair": (0.20, 0.16, 0.10),
+        "shirt": (0.40, 0.30, 0.46),
+        "trim": (0.86, 0.70, 0.26),
+        "pants": (0.28, 0.24, 0.18),
+        "boots": (0.22, 0.19, 0.15),
+        "eyes": (0.98, 0.42, 0.20),
+        "hair_style": "calvo",
+        "face": "furioso",
+    },
+}
+
+# Todo lo que el generador sabe construir, por id.
+TODOS = {**CHARS, **ENEMIGOS}
+
 
 def rgb255(c):
     return tuple(int(round(max(0.0, min(1.0, v)) * 255)) for v in c)

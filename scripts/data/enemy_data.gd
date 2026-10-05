@@ -4,6 +4,10 @@ extends Resource
 
 @export var enemy_name: String = "Slime"
 @export_multiline var description: String = ""
+## Modelo 3D (.glb de scenes/world/3d/chars/). Es lo que se ve en el
+## mundo y en el combate desde el giro a 3D.
+@export var model: PackedScene
+
 @export var sprite: Texture2D
 @export var animations: SpriteFrames
 @export var default_animation: String = "idle"

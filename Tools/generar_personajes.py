@@ -37,7 +37,7 @@ SHOULDER_Z = 0.735
 FOOT_Z = 0.035
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chars_spec import CHARS  # noqa: E402
+from chars_spec import TODOS as CHARS  # noqa: E402
 
 FACES_DIR = OUT_DIR / "faces"
 
@@ -202,6 +202,25 @@ def build_mesh(char_id, spec):
     spherical_uv(head, head_radii)
     parts.append(head)
 
+    if spec.get("ears") == "puntiagudas":
+        # Sin orejas, un goblin es una persona verde.
+        for side, sx in (("L", 1.0), ("R", -1.0)):
+            parts.append(
+                cone(
+                    f"ear.{side}",
+                    (sx * 0.245, -0.025, HEAD_Z + 0.075),
+                    0.062,
+                    0.012,
+                    0.20,
+                    mats["skin"],
+                    rot=(math.radians(-18), math.radians(sx * 62), 0),
+                    verts=10,
+                )
+            )
+
+    if spec["hair_style"] == "calvo":
+        return _join(parts, head, mats, spec)
+
     # Pelo: la propia cabeza inflada y recortada por un plano inclinado. Así
     # el nacimiento queda limpio y por delante no pisa las cejas.
     cap = sphere("hair_cap", (0, -0.012, HEAD_Z + 0.012), (HEAD_R * 1.10, HEAD_R * 1.04, HEAD_R * 1.10), mats["hair"], 32, 22)
@@ -231,6 +250,11 @@ def build_mesh(char_id, spec):
         for side, sx in (("L", 0.215), ("R", -0.215)):
             parts.append(capsule(f"tail.{side}", (sx, -0.05, HEAD_Z - 0.14), 0.053, 0.31, mats["hair"], verts=10))
 
+    return _join(parts, head, mats, spec)
+
+
+def _body(parts, mats):
+    """Cuello para abajo. Igual para todos, lleven pelo o no."""
     # Cuello
     parts.append(capsule("neck", (0, 0, NECK_Z), 0.058, 0.09, mats["skin"], verts=12))
 
@@ -261,6 +285,8 @@ def build_mesh(char_id, spec):
         parts.append(capsule(f"shin.{side}", (sx * 0.072, 0, 0.165), 0.051, 0.19, mats["pants"], verts=12))
         parts.append(box(f"boot.{side}", (sx * 0.072, 0.028, FOOT_Z), (0.105, 0.155, 0.07), mats["boots"]))
 
+def _join(parts, head, mats, spec):
+    _body(parts, mats)
     # Unir en una sola malla: así Godot recibe un MeshInstance3D con una
     # superficie por material, y el skinning es uno solo en vez de 30.
     bpy.ops.object.select_all(action="DESELECT")
@@ -273,6 +299,14 @@ def build_mesh(char_id, spec):
     body.name = "Body"
     # El join deja los datos de malla con el nombre del primer trozo ("Sphere").
     body.data.name = "Body"
+    # Y deja el origen donde esté el objeto activo, que es la CABEZA: a la
+    # altura HEAD_Z. Sin aplicarlo, unos modelos se exportan con el nodo
+    # desplazado 1.035 y otros no, y al colocarlos en una casilla unos flotan.
+    # Hay que hacerlo antes de atar al esqueleto, no después.
+    bpy.ops.object.select_all(action="DESELECT")
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
+    bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
     return body
 
 

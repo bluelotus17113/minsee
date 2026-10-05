@@ -1,11 +1,14 @@
-[gd_resource type="Resource" script_class="ActorStats" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="ActorStats" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/actor_stats.gd" id="1_actorscript"]
 [ext_resource type="Resource" path="res://data/skills/fireball.tres" id="2_fireball"]
 [ext_resource type="Resource" path="res://data/skills/heal.tres" id="3_heal"]
 
+[ext_resource type="PackedScene" path="res://scenes/world/3d/chars/lia.glb" id="98_model"]
+
 [resource]
 script = ExtResource("1_actorscript")
+model = ExtResource("98_model")
 actor_name = "Lia"
 color = Color(0.85, 0.35, 0.85, 1)
 max_hp = 80

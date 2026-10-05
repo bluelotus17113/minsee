@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d01itbym1u8bo"
-path="res://.godot/imported/lia_lia.png-d7c04a6bd14a25cb0ce0a3ed4366c59c.ctex"
+uid="uid://4404wtux75j8"
+path="res://.godot/imported/goblin_boss_goblin_boss.png-8fef99dcd7ea3be8c99e45975e6390e3.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "c059c7f94dd3072ffacbe140794c8194"
+"md5": "ce7d7fb92f3fcf21d3dd0de0b13351b3"
 }
 
 [deps]
 
-source_file="res://scenes/world/3d/chars/lia_lia.png"
-dest_files=["res://.godot/imported/lia_lia.png-d7c04a6bd14a25cb0ce0a3ed4366c59c.ctex"]
+source_file="res://scenes/world/3d/chars/goblin_boss_goblin_boss.png"
+dest_files=["res://.godot/imported/goblin_boss_goblin_boss.png-8fef99dcd7ea3be8c99e45975e6390e3.ctex"]
 
 [params]
 
