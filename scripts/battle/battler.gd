@@ -5,7 +5,7 @@ signal hp_changed(new_hp: int)
 signal mp_changed(new_mp: int)
 signal cp_changed(new_cp: int)
 signal died
-signal moved(new_pos: Vector2i)
+signal moved(new_pos: Vector2)
 signal damage_taken(amount: int, was_crit: bool, was_weak: bool)
 signal healed(amount: int)
 signal break_triggered
@@ -27,7 +27,8 @@ var luck: int
 
 var move_range: int = 3
 var melee_range: int = 1
-var grid_pos: Vector2i = Vector2i(-999, -999)
+## Posición en el campo, en metros. Antes era una casilla.
+var field_pos: Vector2 = Vector2.ZERO
 var color: Color = Color.WHITE
 var model: PackedScene = null
 var sprite: Texture2D = null
@@ -53,7 +54,7 @@ var buff_turns: int = 0
 
 # Casting (Arts con cast_time): cuando es no-nulo, en el siguiente turno se resuelve.
 var pending_skill: SkillData = null
-var pending_target_cell: Vector2i = Vector2i.ZERO
+var pending_target_pos: Vector2 = Vector2.ZERO
 var cast_remaining: int = 0
 var is_casting: bool = false
 

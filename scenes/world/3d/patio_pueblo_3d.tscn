@@ -61,34 +61,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 6.5)
 shape = SubResource("Box_house")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -3)
 
 [node name="Mercader" parent="." instance=ExtResource("3_npc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.95, 2)
 npc_data = ExtResource("4_mercader")
 
 [node name="Posadero" parent="." instance=ExtResource("3_npc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.95, 0)
 npc_data = ExtResource("5_posadero")
 
 [node name="Cofre" parent="." instance=ExtResource("9_chest")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, -2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.95, -2.5)
 chest_data = ExtResource("10_chestdata")
 
 [node name="PortalToInterior" parent="." instance=ExtResource("6_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 3.5)
 portal_id = "entrada_casa"
 target_scene = "res://scenes/world/3d/interior_casa_3d.tscn"
 target_portal_id = "puerta_interior"
 prompt_text = "Entrar a la casa"
 
 [node name="ZonaEncuentros" parent="." instance=ExtResource("7_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -2)
 encounter_table = ExtResource("8_table")
 zone_size = Vector3(10, 2, 6)
 
 [node name="PortalAlSendero" parent="." instance=ExtResource("6_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.05, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.95, -3)
 portal_id = "ir_sendero"
 target_scene = "res://scenes/world/3d/sendero_bosque_3d.tscn"
 target_portal_id = "vuelta_patio"

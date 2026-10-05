@@ -6,7 +6,7 @@ signal turn_started(battler: Battler, bonus: int)
 signal need_player_action(battler: Battler)
 signal battle_ended(victory: bool)
 signal stats_changed
-signal grid_changed
+signal field_changed
 signal preview_changed
 
 enum ActionKind { ATTACK, ART, CRAFT, DEFEND, ITEM, RUN }
@@ -14,30 +14,25 @@ enum ActionKind { ATTACK, ART, CRAFT, DEFEND, ITEM, RUN }
 var allies: Array[Battler] = []
 var enemies: Array[Battler] = []
 var queue: TurnQueue
-var grid: BattleGrid
+var field: BattleField
 var current: Battler
 var current_bonus: int = TurnQueue.TurnBonus.NONE
 var finished: bool = false
 
 func setup(party: Array[ActorStats], enemy_list: Array[EnemyData]) -> void:
 	queue = TurnQueue.new()
-	grid = BattleGrid.new()
+	field = BattleField.new()
 	for i in party.size():
 		var b := Battler.from_actor(party[i])
 		allies.append(b)
 		queue.add(b)
-		var cell := Vector2i(1, 1 + i * 2)
-		while not grid.is_free(cell) and grid.in_bounds(cell):
-			cell.y += 1
-		grid.place(b, cell)
+		# place() ya busca hueco libre si el sitio está ocupado.
+		field.place(b, BattleField.spawn_pos(i, party.size(), true))
 	for i in enemy_list.size():
 		var b := Battler.from_enemy(enemy_list[i])
 		enemies.append(b)
 		queue.add(b)
-		var cell := Vector2i(BattleGrid.WIDTH - 2, 1 + i * 2)
-		while not grid.is_free(cell) and grid.in_bounds(cell):
-			cell.y += 1
-		grid.place(b, cell)
+		field.place(b, BattleField.spawn_pos(i, enemy_list.size(), false))
 		GameState.register_enemy_seen(enemy_list[i])
 		b.died.connect(GameState.register_enemy_killed.bind(enemy_list[i]))
 	queue.plan()
@@ -117,13 +112,13 @@ func _apply_pre_turn_bonus(b: Battler, bonus: int) -> void:
 
 # ---------- Acciones jugador ----------
 
-func submit_attack(target_cell: Vector2i) -> void:
+func submit_attack(target_pos: Vector2) -> void:
 	if current == null or not current.is_player: return
-	var target: Battler = grid.get_at(target_cell)
+	var target: Battler = field.get_at(target_pos)
 	if target == null or target.is_player:
-		log_message.emit("Casilla inválida.")
+		log_message.emit("Ahí no hay ningún enemigo.")
 		return
-	if grid.chebyshev(current.grid_pos, target.grid_pos) > current.melee_range:
+	if BattleField.distance(current.field_pos, target.field_pos) > current.melee_range:
 		log_message.emit("Fuera de alcance.")
 		return
 	_do_attack(current, target)
@@ -131,7 +126,7 @@ func submit_attack(target_cell: Vector2i) -> void:
 	await get_tree().create_timer(0.4).timeout
 	_advance()
 
-func submit_art(skill: SkillData, target_cell: Vector2i) -> void:
+func submit_art(skill: SkillData, target_pos: Vector2) -> void:
 	if current == null or not current.is_player: return
 	if not current.spend_mp(skill.mp_cost):
 		log_message.emit("Sin MP suficiente.")
@@ -142,11 +137,11 @@ func submit_art(skill: SkillData, target_cell: Vector2i) -> void:
 		cast_time = 0
 		log_message.emit("¡0-CAST! El Art se lanza al instante.")
 	if cast_time <= 0:
-		_resolve_art_now(current, skill, target_cell)
+		_resolve_art_now(current, skill, target_pos)
 	else:
 		current.is_casting = true
 		current.pending_skill = skill
-		current.pending_target_cell = target_cell
+		current.pending_target_pos = target_pos
 		current.cast_remaining = cast_time
 		log_message.emit("%s canaliza %s..." % [current.display_name, skill.skill_name])
 		queue.insert_cast_resolution(current, float(cast_time))
@@ -155,7 +150,7 @@ func submit_art(skill: SkillData, target_cell: Vector2i) -> void:
 	await get_tree().create_timer(0.4).timeout
 	_advance()
 
-func submit_craft(skill: SkillData, target_cell: Vector2i) -> void:
+func submit_craft(skill: SkillData, target_pos: Vector2) -> void:
 	if current == null or not current.is_player: return
 	if skill.is_limit_break:
 		if current.cp < skill.limit_min_cp:
@@ -169,7 +164,7 @@ func submit_craft(skill: SkillData, target_cell: Vector2i) -> void:
 		log_message.emit("Sin CP suficiente.")
 		need_player_action.emit(current)
 		return
-	_resolve_craft_now(current, skill, target_cell)
+	_resolve_craft_now(current, skill, target_pos)
 	stats_changed.emit()
 	await get_tree().create_timer(0.4).timeout
 	_advance()
@@ -230,15 +225,15 @@ func _apply_item_effect(user: Battler, item: ItemData, target: Battler) -> void:
 			t.buff_turns = max(t.buff_turns, 3)
 			log_message.emit("%s defensa +%d." % [t.display_name, item.power])
 
-func submit_move(cell: Vector2i) -> bool:
+func submit_move(pos: Vector2) -> bool:
 	if current == null or not current.is_player: return false
-	if grid.chebyshev(current.grid_pos, cell) == 0: return false
-	var reachable := grid.bfs_reachable(current.grid_pos, current.move_range)
-	if not (cell in reachable):
-		log_message.emit("Esa casilla no está al alcance.")
+	# El click se recorta al círculo en vez de rechazarse: así moverse nunca
+	# falla, como en el remake. Lo que no cabe se queda en el borde.
+	var goal := field.clamp_reachable(current, pos, float(current.move_range))
+	if goal.distance_to(current.field_pos) < 0.05:
 		return false
-	grid.move_to(current, cell)
-	grid_changed.emit()
+	current.field_pos = goal
+	field_changed.emit()
 	return true
 
 func submit_run() -> void:
@@ -256,9 +251,9 @@ func auto_play_player(b: Battler) -> void:
 		_advance()
 		return
 	var target: Battler = alive_enemies[0]
-	var best_d := grid.manhattan(b.grid_pos, target.grid_pos)
+	var best_d := BattleField.distance(b.field_pos, target.field_pos)
 	for e in alive_enemies:
-		var d := grid.manhattan(b.grid_pos, e.grid_pos)
+		var d := BattleField.distance(b.field_pos, e.field_pos)
 		if d < best_d:
 			best_d = d
 			target = e
@@ -267,17 +262,17 @@ func auto_play_player(b: Battler) -> void:
 	for s in b.skills:
 		if s.kind == SkillData.Kind.CRAFT and s.is_limit_break and b.cp >= s.limit_min_cp:
 			s_craft = s; break
-	var dist := grid.chebyshev(b.grid_pos, target.grid_pos)
+	var dist := BattleField.distance(b.field_pos, target.field_pos)
 	if dist > b.melee_range:
-		_ai_step_towards(b, target.grid_pos)
-		grid_changed.emit()
+		_ai_step_towards(b, target.field_pos)
+		field_changed.emit()
 		await get_tree().create_timer(0.25).timeout
-	if s_craft and grid.chebyshev(b.grid_pos, target.grid_pos) <= s_craft.skill_range:
+	if s_craft and BattleField.distance(b.field_pos, target.field_pos) <= s_craft.skill_range:
 		b.cp = 0
 		b.cp_changed.emit(0)
 		log_message.emit("[color=#ff66cc][S-CRAFT][/color] ¡%s desata %s!" % [b.display_name, s_craft.skill_name])
-		_resolve_craft_now(b, s_craft, target.grid_pos)
-	elif grid.chebyshev(b.grid_pos, target.grid_pos) <= b.melee_range:
+		_resolve_craft_now(b, s_craft, target.field_pos)
+	elif BattleField.distance(b.field_pos, target.field_pos) <= b.melee_range:
 		_do_attack(b, target)
 	else:
 		log_message.emit("%s avanza." % b.display_name)
@@ -290,20 +285,18 @@ func auto_play_player(b: Battler) -> void:
 
 func _resolve_cast(b: Battler) -> void:
 	var skill: SkillData = b.pending_skill
-	var target_cell: Vector2i = b.pending_target_cell
+	var target_pos: Vector2 = b.pending_target_pos
 	b.is_casting = false
 	b.pending_skill = null
 	b.cast_remaining = 0
 	if skill == null: return
-	_resolve_art_now(b, skill, target_cell)
+	_resolve_art_now(b, skill, target_pos)
 
-func _resolve_art_now(caster: Battler, skill: SkillData, target_cell: Vector2i) -> void:
-	var cells: Array = grid.cells_in_aoe(target_cell, skill.aoe_shape, skill.aoe_radius)
+func _resolve_art_now(caster: Battler, skill: SkillData, target_pos: Vector2) -> void:
 	var hits: Array[Battler] = []
-	for c in cells:
-		var occ: Battler = grid.get_at(c)
-		if occ != null and occ.is_alive():
-			hits.append(occ)
+	for u in field.units_in_aoe(target_pos, skill.aoe_shape, float(skill.aoe_radius), caster.field_pos):
+		if u.is_alive():
+			hits.append(u)
 	if hits.is_empty():
 		log_message.emit("%s usa %s pero falla." % [caster.display_name, skill.skill_name])
 		return
@@ -311,13 +304,11 @@ func _resolve_art_now(caster: Battler, skill: SkillData, target_cell: Vector2i) 
 		_apply_skill_damage(caster, skill, t)
 	caster.gain_cp(10)
 
-func _resolve_craft_now(user: Battler, skill: SkillData, target_cell: Vector2i) -> void:
-	var cells: Array = grid.cells_in_aoe(target_cell, skill.aoe_shape, skill.aoe_radius)
+func _resolve_craft_now(user: Battler, skill: SkillData, target_pos: Vector2) -> void:
 	var targets: Array[Battler] = []
-	for c in cells:
-		var occ: Battler = grid.get_at(c)
-		if occ != null and occ.is_alive():
-			targets.append(occ)
+	for u in field.units_in_aoe(target_pos, skill.aoe_shape, float(skill.aoe_radius), user.field_pos):
+		if u.is_alive():
+			targets.append(u)
 	if targets.is_empty() and skill.target != SkillData.Target.SELF:
 		log_message.emit("%s usa %s pero no impacta." % [user.display_name, skill.skill_name])
 		return
@@ -366,11 +357,11 @@ func _apply_craft_effect(user: Battler, skill: SkillData, target: Battler) -> vo
 	match skill.craft_effect:
 		SkillData.CraftEffect.PUSH:
 			if skill.push_distance > 0 and target != user:
-				var landed := grid.push(target, user.grid_pos, skill.push_distance)
-				if landed != target.grid_pos:
+				var landed := field.push(target, user.field_pos, float(skill.push_distance))
+				if landed != target.field_pos:
 					pass
 				log_message.emit("%s es empujado." % target.display_name)
-				grid_changed.emit()
+				field_changed.emit()
 		SkillData.CraftEffect.STUN:
 			target.stun_remaining = skill.stun_turns
 			log_message.emit("%s queda aturdido %d turno(s)." % [target.display_name, skill.stun_turns])
@@ -433,9 +424,9 @@ func _enemy_ai(b: Battler) -> void:
 	if alive_allies.is_empty():
 		_finish(false); return
 	var target: Battler = alive_allies[0]
-	var best_d := grid.manhattan(b.grid_pos, target.grid_pos)
+	var best_d := BattleField.distance(b.field_pos, target.field_pos)
 	for a in alive_allies:
-		var d := grid.manhattan(b.grid_pos, a.grid_pos)
+		var d := BattleField.distance(b.field_pos, a.field_pos)
 		if d < best_d:
 			best_d = d
 			target = a
@@ -451,40 +442,40 @@ func _enemy_ai(b: Battler) -> void:
 
 	# Acercarse si está fuera de rango melee
 	if use_skill == null:
-		var dist := grid.chebyshev(b.grid_pos, target.grid_pos)
+		var dist := BattleField.distance(b.field_pos, target.field_pos)
 		if dist > b.melee_range:
-			_ai_step_towards(b, target.grid_pos)
-			grid_changed.emit()
+			_ai_step_towards(b, target.field_pos)
+			field_changed.emit()
 			await get_tree().create_timer(0.3).timeout
 		# Re-evaluar tras moverse
-		if grid.chebyshev(b.grid_pos, target.grid_pos) <= b.melee_range:
+		if BattleField.distance(b.field_pos, target.field_pos) <= b.melee_range:
 			_do_attack(b, target)
 		else:
 			log_message.emit("%s avanza." % b.display_name)
 	else:
-		var dist := grid.chebyshev(b.grid_pos, target.grid_pos)
+		var dist := BattleField.distance(b.field_pos, target.field_pos)
 		if dist > use_skill.skill_range:
-			_ai_step_towards(b, target.grid_pos)
-			grid_changed.emit()
+			_ai_step_towards(b, target.field_pos)
+			field_changed.emit()
 			await get_tree().create_timer(0.3).timeout
-		if grid.chebyshev(b.grid_pos, target.grid_pos) <= use_skill.skill_range:
+		if BattleField.distance(b.field_pos, target.field_pos) <= use_skill.skill_range:
 			if use_skill.kind == SkillData.Kind.ART:
 				b.spend_mp(use_skill.mp_cost)
 				var cast_time := use_skill.cast_time
 				if current_bonus == TurnQueue.TurnBonus.ZERO_ARTS:
 					cast_time = 0
 				if cast_time <= 0:
-					_resolve_art_now(b, use_skill, target.grid_pos)
+					_resolve_art_now(b, use_skill, target.field_pos)
 				else:
 					b.is_casting = true
 					b.pending_skill = use_skill
-					b.pending_target_cell = target.grid_pos
+					b.pending_target_pos = target.field_pos
 					b.cast_remaining = cast_time
 					log_message.emit("%s canaliza %s..." % [b.display_name, use_skill.skill_name])
 					queue.insert_cast_resolution(b, float(cast_time))
 			else:
 				b.spend_cp(use_skill.cp_cost)
-				_resolve_craft_now(b, use_skill, target.grid_pos)
+				_resolve_craft_now(b, use_skill, target.field_pos)
 		else:
 			_do_attack(b, target)
 	preview_changed.emit()
@@ -492,17 +483,12 @@ func _enemy_ai(b: Battler) -> void:
 	await get_tree().create_timer(0.5).timeout
 	_advance()
 
-func _ai_step_towards(b: Battler, goal: Vector2i) -> void:
-	var reach := grid.bfs_reachable(b.grid_pos, b.move_range)
-	var best: Vector2i = b.grid_pos
-	var best_d := grid.manhattan(b.grid_pos, goal)
-	for c in reach:
-		var d: int = grid.manhattan(c, goal)
-		if d < best_d:
-			best_d = d
-			best = c
-	if best != b.grid_pos:
-		grid.move_to(b, best)
+func _ai_step_towards(b: Battler, goal: Vector2) -> void:
+	# Se para justo dentro de su alcance, no encima del objetivo.
+	var parada: float = maxf(float(b.melee_range) * 0.9, BattleField.BODY * 2.0)
+	var destino := field.step_towards(b, goal, float(b.move_range), parada)
+	if destino.distance_to(b.field_pos) > 0.01:
+		b.field_pos = destino
 
 # ---------- Helpers ----------
 

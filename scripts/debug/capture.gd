@@ -49,8 +49,21 @@ func _shoot_battle(args: PackedStringArray) -> void:
 	if packed == null:
 		push_error("No se pudo cargar battle_3d.tscn")
 		return
-	add_child(packed.instantiate())
+	var escena := packed.instantiate()
+	add_child(escena)
 	await _wait(frames)
+	# Con "mover" se pulsa el botón para ver el círculo de movimiento.
+	if args.size() > 4 and args[4] == "mover":
+		escena.call("_on_move_pressed")
+		await _wait(20)
+	elif args.size() > 4 and args[4] == "andar":
+		# Se ordena un movimiento y se fotografía a mitad de camino, que es lo
+		# único que demuestra que camina en vez de teletransportarse.
+		var mgr = escena.get_node("BattleManager")
+		var destino: Vector2 = mgr.current.field_pos + Vector2(2.2, 1.4)
+		mgr.submit_move(destino)
+		await _wait(14)
+		print("[andar] caminando=%s  pos=%s" % [escena.call("is_walking"), mgr.current.field_pos])
 	await _save(out)
 
 func _shoot_scene(args: PackedStringArray) -> void:
@@ -63,12 +76,36 @@ func _shoot_scene(args: PackedStringArray) -> void:
 		push_error("No se pudo cargar %s" % target)
 		return
 	add_child(packed.instantiate())
+	# La cámara del mundo captura el puntero, y al capturar sin nadie delante
+	# el sistema genera movimiento de ratón: la cámara giraba sola y la foto
+	# no representaba el juego. Se le quita el control de la mirada.
+	await get_tree().process_frame
+	for rig in _find_rigs(self):
+		rig.set_look_enabled(false)
 	if walk:
 		Input.action_press("move_right")
 	await _wait(frames)
 	await _save(out)
 	if walk:
 		Input.action_release("move_right")
+	# Dónde acabó cada cosa: para saber si la cámara sigue al jugador o no.
+	var cam := get_viewport().get_camera_3d()
+	var jugador := get_tree().get_first_node_in_group("player") as Node3D
+	if cam and jugador:
+		print("[diag] cámara=%s  jugador=%s  distancia=%.2f" % [
+			cam.global_position, jugador.global_position,
+			cam.global_position.distance_to(jugador.global_position)])
+		var skel := jugador.find_child("Skeleton3D", true, false) as Skeleton3D
+		if skel == null:
+			print("[diag] el jugador NO tiene Skeleton3D")
+		else:
+			var hueso := skel.find_bone("foot.L")
+			var pie: Vector3 = skel.global_transform * skel.get_bone_global_pose(hueso).origin
+			print("[diag] pie_mundo_y=%+.3f  jugador_y=%+.3f  skel_y=%+.3f" % [
+				pie.y, jugador.global_position.y, skel.global_position.y])
+		print("[diag] brazo=%.2f  camara_local=%s" % [
+			(cam.get_parent() as SpringArm3D).get_hit_length() if cam.get_parent() is SpringArm3D else -1.0,
+			cam.position])
 
 func _shoot_chars(args: PackedStringArray) -> void:
 	var out: String = args[1] if args.size() > 1 else "user://chars.png"
@@ -92,6 +129,15 @@ func _shoot_chars(args: PackedStringArray) -> void:
 	sun.light_color = Color(1.0, 0.96, 0.9)
 	add_child(sun)
 
+	var suelo := MeshInstance3D.new()
+	var plano := PlaneMesh.new()
+	plano.size = Vector2(20, 20)
+	suelo.mesh = plano
+	var mat_suelo := StandardMaterial3D.new()
+	mat_suelo.albedo_color = Color(0.34, 0.36, 0.44)
+	suelo.material_override = mat_suelo
+	add_child(suelo)
+
 	var spacing := 0.85
 	var total := (ids.size() - 1) * spacing
 	for i in ids.size():
@@ -108,6 +154,24 @@ func _shoot_chars(args: PackedStringArray) -> void:
 		holder.add_child(inst)
 		add_child(holder)
 		ToonSkin.skin(inst)
+		# Dónde cae el pie DE VERDAD. Mirar el campo del glTF no sirve: en una
+		# malla con esqueleto quien coloca los vértices es el hueso.
+		var skel := inst.find_child("Skeleton3D", true, false) as Skeleton3D
+		if skel == null:
+			print("[pie] %-12s SIN Skeleton3D" % ids[i])
+		else:
+			var nombres := []
+			for n in skel.get_bone_count():
+				nombres.append(skel.get_bone_name(n))
+			var hueso := skel.find_bone("foot.L")
+			if hueso < 0:
+				print("[pie] %-12s sin hueso foot.L. huesos=%s" % [ids[i], nombres.slice(0, 6)])
+			else:
+				var mundo: Vector3 = skel.global_transform * skel.get_bone_global_pose(hueso).origin
+				var malla := inst.find_child("Body", true, false)
+				print("[pie] %-12s y=%+.3f  skel_y=%+.3f  malla_y=%+.3f" % [
+					ids[i], mundo.y, skel.global_position.y,
+					(malla as Node3D).global_position.y if malla is Node3D else -99.0])
 		var ap := _find_anim(inst)
 		if ap:
 			for n in ap.get_animation_list():
@@ -129,6 +193,14 @@ func _shoot_chars(args: PackedStringArray) -> void:
 
 	await _wait(30)
 	await _save(out)
+
+func _find_rigs(root: Node) -> Array:
+	var out: Array = []
+	if root is ThirdPersonCamera:
+		out.append(root)
+	for c in root.get_children():
+		out.append_array(_find_rigs(c))
+	return out
 
 func _find_anim(root: Node) -> AnimationPlayer:
 	if root is AnimationPlayer:

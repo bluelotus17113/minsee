@@ -107,27 +107,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, 0)
 shape = SubResource("Box_wall_R")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 5)
 
 [node name="PortalSalir" parent="." instance=ExtResource("3_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 6)
 portal_id = "salir_cueva"
 target_scene = "res://scenes/world/3d/sendero_bosque_3d.tscn"
 target_portal_id = "ir_cueva"
 prompt_text = "Salir de la cueva"
 
 [node name="ZonaEncuentros" parent="." instance=ExtResource("4_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 encounter_table = ExtResource("5_table")
 zone_size = Vector3(14, 2, 10)
 
 [node name="MurcielagoVisible" parent="." instance=ExtResource("6_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.95, 0)
 enemies = Array[Resource]([ExtResource("7_bat")])
 wander_radius = 2.0
 wander_speed = 1.6
 
 [node name="EsqueletoVisible" parent="." instance=ExtResource("6_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.95, 0)
 enemies = Array[Resource]([ExtResource("8_sk")])
 wander_radius = 2.0

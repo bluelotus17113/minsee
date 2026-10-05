@@ -74,18 +74,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.25, 0)
 shape = SubResource("Box_wall_right")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.1, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.95, 1.5)
 
 [node name="Aldeano" parent="." instance=ExtResource("3_npc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.1, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.95, -0.5)
 npc_data = ExtResource("4_aldeano")
 
 [node name="Cofre" parent="." instance=ExtResource("6_chest")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.1, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.95, -1.5)
 chest_data = ExtResource("7_chestdata")
 
 [node name="PortalToExterior" parent="." instance=ExtResource("5_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 2.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 2.3)
 portal_id = "puerta_interior"
 target_scene = "res://scenes/world/3d/patio_pueblo_3d.tscn"
 target_portal_id = "entrada_casa"

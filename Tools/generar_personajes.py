@@ -137,6 +137,12 @@ def cut_below(obj, plane_z, slope_y):
         plane_no=(0.0, -slope_y, 1.0),
         clear_inner=True,
     )
+    # Tapar el agujero del corte. Una malla abierta hace fallar al cálculo
+    # automático de pesos ("Bone Heat Weighting: failed to find solution"),
+    # y sin pesos el .glb sale SIN skin: ni esqueleto ni animación en Godot.
+    borde = [e for e in bm.edges if len(e.link_faces) == 1]
+    if borde:
+        bmesh.ops.holes_fill(bm, edges=borde, sides=0)
     bm.to_mesh(me)
     bm.free()
     me.update()
@@ -362,6 +368,15 @@ def bind(body, skel):
     skel.select_set(True)
     bpy.context.view_layer.objects.active = skel
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+    # El atado puede fallar en silencio y dejar la malla sin grupos: el .glb
+    # sale sin skin y el personaje ni se anima ni se coloca bien. Más vale
+    # reventar aquí que descubrirlo dentro del juego.
+    con_peso = sum(1 for v in body.data.vertices if len(v.groups) > 0)
+    if con_peso < len(body.data.vertices) * 0.98:
+        raise SystemExit(
+            f"Atado fallido: solo {con_peso}/{len(body.data.vertices)} vértices "
+            "tienen peso. Suele ser una malla abierta (mira cut_below)."
+        )
 
 
 # ------------------------------------------------------------------ animación

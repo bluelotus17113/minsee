@@ -1,27 +1,27 @@
 extends Node3D
 
-## Vista 3D del combate táctico.
+## Vista del combate, al estilo del remake de Trails in the Sky.
 ##
-## Las reglas NO están aquí: viven en BattleManager, BattleGrid, TurnQueue y
-## Battler, y no se han tocado. Este script solo traduce la rejilla a un
-## tablero en el mundo, dibuja los resaltes y convierte el ratón en casillas.
-## La interfaz sigue siendo la misma de la versión 2D, porque es un CanvasLayer
-## y no le afecta que debajo haya 3D.
+## No hay casillas: el campo es continuo (BattleField) y el alcance de
+## movimiento es un círculo alrededor de quien tiene el turno. Las reglas
+## siguen fuera de aquí; esto solo dibuja el campo, los círculos y el ratón.
 
-const TILE := 1.0
-const BOARD_Y := 0.0
-## Altura a la que flotan los resaltes para no pelearse con el suelo.
-const MARK_Y := 0.012
+## Velocidad a la que camina un combatiente al reposicionarse, en m/s.
+const WALK_SPEED := 2.6
+const GROUND_Y := 0.0
+## Altura de los círculos sobre el suelo, para que no parpadeen contra él.
+const MARK_Y := 0.015
 
 enum Phase { IDLE, CHOOSE_MOVE, CHOOSE_ACTION, PICK_TARGET_ATTACK, PICK_TARGET_SKILL, PICK_SKILL }
 
 @onready var manager: BattleManager = $BattleManager
-@onready var board: Node3D = $Board
+@onready var arena: Node3D = $Arena
 @onready var battlers_node: Node3D = $Battlers
-@onready var highlight_node: Node3D = $Highlights
+@onready var marks_node: Node3D = $Marks
 @onready var fx_node: Node3D = $FX
-@onready var cam_rig: Node3D = $CamRig
-@onready var camera: Camera3D = $CamRig/Camera3D
+@onready var cam_target: Node3D = $CamTarget
+@onready var cam_rig: ThirdPersonCamera = $CamTarget/CamRig
+@onready var camera: Camera3D = $CamTarget/CamRig/SpringArm3D/Camera3D
 
 @onready var log_label: RichTextLabel = $UI/BottomPanel/VBox/LogPanel/LogLabel
 @onready var action_panel: Panel = $UI/BottomPanel/VBox/ActionPanel
@@ -43,21 +43,16 @@ var pending_item: ItemData = null
 var has_moved: bool = false
 var auto_battle: bool = false
 
-var _hover_cell: Vector2i = Vector2i(-999, -999)
-var _hover_mark: MeshInstance3D = null
-var _hover_tween: Tween = null
+var _anims: Dictionary = {}
+var _range_mark: MeshInstance3D = null
+var _ghost: MeshInstance3D = null
+var _aoe_mark: MeshInstance3D = null
 var _active_mark: MeshInstance3D = null
 var _active_tween: Tween = null
-var _quad: QuadMesh = null
-var _cam_home: Vector3 = Vector3.ZERO
+var _walking: int = 0
+var _focus: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
-	_quad = QuadMesh.new()
-	_quad.size = Vector2(TILE * 0.92, TILE * 0.92)
-	# El quad nace de pie: tumbarlo es cosa de la malla, no de cada nodo.
-	_quad.orientation = PlaneMesh.FACE_Y
-	_cam_home = cam_rig.position
-
 	skill_panel.visible = false
 	action_panel.visible = false
 	prompt_label.text = ""
@@ -67,7 +62,7 @@ func _ready() -> void:
 	manager.battle_ended.connect(_on_battle_ended)
 	manager.stats_changed.connect(_refresh_stats)
 	manager.turn_started.connect(_on_turn_started)
-	manager.grid_changed.connect(_refresh_grid_positions)
+	manager.field_changed.connect(_refresh_positions)
 	manager.preview_changed.connect(_refresh_atb)
 
 	var party := GameState.party
@@ -75,49 +70,52 @@ func _ready() -> void:
 	if enemies.is_empty():
 		enemies = [_default_enemy()]
 	manager.setup(party, enemies)
-	_build_board()
+	_build_arena()
 	_build_status_panel()
 	_spawn_battler_views()
-	_refresh_grid_positions(true)
+	_refresh_positions(true)
 	_refresh_stats()
 	_refresh_atb()
 	manager.start()
+
+## La cámara sigue a quien tiene el turno. Se lee la posición de su NODO, no
+## la del campo, para que también acompañe durante la caminata.
+func _process(delta: float) -> void:
+	if manager.current != null and battler_views.has(manager.current):
+		var v: Node3D = battler_views[manager.current]
+		_focus = v.position + Vector3(0, 0.95, 0)
+	cam_target.position = cam_target.position.lerp(_focus, 1.0 - exp(-5.0 * delta))
 
 func _default_enemy() -> EnemyData:
 	var e := EnemyData.new()
 	e.enemy_name = "Slime"
 	return e
 
-# ---------- Rejilla <-> mundo ----------
+# ---------- Campo <-> mundo ----------
 
-## El tablero se centra en el origen: así la cámara no depende de su tamaño.
-func _cell_to_world(cell: Vector2i) -> Vector3:
-	return Vector3(
-		(float(cell.x) - (BattleGrid.WIDTH - 1) * 0.5) * TILE,
-		BOARD_Y,
-		(float(cell.y) - (BattleGrid.HEIGHT - 1) * 0.5) * TILE
-	)
+func _field_to_world(p: Vector2) -> Vector3:
+	return Vector3(p.x, GROUND_Y, p.y)
 
-func _world_to_cell(pos: Vector3) -> Vector2i:
-	return Vector2i(
-		int(round(pos.x / TILE + (BattleGrid.WIDTH - 1) * 0.5)),
-		int(round(pos.z / TILE + (BattleGrid.HEIGHT - 1) * 0.5))
-	)
+func _world_to_field(p: Vector3) -> Vector2:
+	return Vector2(p.x, p.z)
 
-## Casilla bajo el ratón. Se corta el rayo de la cámara contra el plano del
-## tablero: no hace falta física ni colisionadores para 60 casillas.
-func _mouse_cell() -> Vector2i:
+## Punto del campo bajo el ratón. Se corta el rayo de la cámara contra el
+## plano del suelo: para una arena plana no hace falta física.
+func _mouse_point() -> Vector2:
 	var mp := get_viewport().get_mouse_position()
 	var from := camera.project_ray_origin(mp)
 	var dir := camera.project_ray_normal(mp)
 	if absf(dir.y) < 0.0001:
-		return Vector2i(-999, -999)
-	var t := (BOARD_Y - from.y) / dir.y
+		return Vector2(99999, 99999)
+	var t := (GROUND_Y - from.y) / dir.y
 	if t < 0.0:
-		return Vector2i(-999, -999)
-	return _world_to_cell(from + dir * t)
+		return Vector2(99999, 99999)
+	return _world_to_field(from + dir * t)
 
-# ---------- Tablero ----------
+func _valid(p: Vector2) -> bool:
+	return absf(p.x) < 9000.0
+
+# ---------- Arena ----------
 
 func _flat_material(color: Color, unshaded: bool = true) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -129,20 +127,50 @@ func _flat_material(color: Color, unshaded: bool = true) -> StandardMaterial3D:
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return m
 
-func _build_board() -> void:
-	for child in board.get_children():
+func _disc(radius: float, color: Color) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var c := CylinderMesh.new()
+	c.top_radius = radius
+	c.bottom_radius = radius
+	c.height = 0.01
+	c.radial_segments = 48
+	c.rings = 0
+	mi.mesh = c
+	mi.material_override = _flat_material(color)
+	return mi
+
+func _ring(radius: float, grosor: float, color: Color) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var t := TorusMesh.new()
+	t.inner_radius = maxf(0.01, radius - grosor)
+	t.outer_radius = radius
+	t.rings = 56
+	t.ring_segments = 6
+	mi.mesh = t
+	mi.material_override = _flat_material(color)
+	return mi
+
+func _build_arena() -> void:
+	for child in arena.get_children():
 		child.queue_free()
-	var tile_mesh := BoxMesh.new()
-	tile_mesh.size = Vector3(TILE * 0.96, 0.12, TILE * 0.96)
-	var claro := _flat_material(Color(0.30, 0.33, 0.44), false)
-	var oscuro := _flat_material(Color(0.22, 0.24, 0.33), false)
-	for y in BattleGrid.HEIGHT:
-		for x in BattleGrid.WIDTH:
-			var mi := MeshInstance3D.new()
-			mi.mesh = tile_mesh
-			mi.material_override = oscuro if (x + y) % 2 == 0 else claro
-			mi.position = _cell_to_world(Vector2i(x, y)) - Vector3(0, 0.06, 0)
-			board.add_child(mi)
+	# Suelo: un disco achatado en Z para que la arena sea una elipse, más
+	# ancha que profunda, con los dos bandos enfrentados por el eje largo.
+	var suelo := _disc(1.0, Color(0.27, 0.29, 0.40))
+	suelo.material_override = _flat_material(Color(0.27, 0.29, 0.40), false)
+	suelo.scale = Vector3(BattleField.RADIUS_X, 1.0, BattleField.RADIUS_Z)
+	suelo.position.y = -0.01
+	arena.add_child(suelo)
+
+	var borde := _ring(1.0, 0.045, Color(0.55, 0.62, 0.85, 0.75))
+	borde.scale = Vector3(BattleField.RADIUS_X, 1.0, BattleField.RADIUS_Z)
+	borde.position.y = MARK_Y
+	arena.add_child(borde)
+
+	# Línea de separación entre bandos: ayuda a leer el campo de un vistazo.
+	var media := _disc(1.0, Color(0.42, 0.46, 0.62, 0.5))
+	media.scale = Vector3(0.035, 1.0, BattleField.RADIUS_Z * 0.92)
+	media.position.y = MARK_Y * 0.5
+	arena.add_child(media)
 
 # ---------- Unidades ----------
 
@@ -150,6 +178,7 @@ func _spawn_battler_views() -> void:
 	for child in battlers_node.get_children():
 		child.queue_free()
 	battler_views.clear()
+	_anims.clear()
 	for b in manager.allies + manager.enemies:
 		var view := _make_unit(b)
 		battlers_node.add_child(view)
@@ -158,16 +187,19 @@ func _spawn_battler_views() -> void:
 		b.healed.connect(_on_battler_healed.bind(b))
 		b.break_triggered.connect(_on_battler_broken.bind(b))
 
+func _facing_yaw(b: Battler) -> float:
+	# Los bandos se miran: aliados hacia +X, enemigos hacia -X. El "adelante"
+	# de un Node3D es -Z, de ahí el atan2 con los dos signos cambiados.
+	var f := Vector3(1, 0, 0) if b.is_player else Vector3(-1, 0, 0)
+	return atan2(-f.x, -f.z)
+
 func _make_unit(b: Battler) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Unit_" + b.display_name
 
 	var model_holder := Node3D.new()
 	model_holder.name = "Model"
-	# Los bandos se miran: aliados a +X, enemigos a -X. El "adelante" de un
-	# Node3D es -Z, de ahí el atan2 con los dos signos cambiados.
-	var facing := Vector3(1, 0, 0) if b.is_player else Vector3(-1, 0, 0)
-	model_holder.rotation.y = atan2(-facing.x, -facing.z)
+	model_holder.rotation.y = _facing_yaw(b)
 	root.add_child(model_holder)
 
 	if b.model != null:
@@ -182,9 +214,10 @@ func _make_unit(b: Battler) -> Node3D:
 					a.loop_mode = Animation.LOOP_LINEAR
 			if anim.has_animation("idle"):
 				anim.play("idle")
+			_anims[b] = anim
 	else:
-		# Sin modelo, una cápsula del color del battler. Es feo, pero se ve:
-		# un hueco invisible en el tablero sería peor.
+		# Sin modelo, una cápsula de su color. Es feo, pero un hueco invisible
+		# en el campo sería peor.
 		var mi := MeshInstance3D.new()
 		var cap := CapsuleMesh.new()
 		cap.radius = 0.28
@@ -195,14 +228,16 @@ func _make_unit(b: Battler) -> Node3D:
 		model_holder.add_child(mi)
 		push_warning("battle_3d: %s no tiene modelo 3D." % b.display_name)
 
-	var hp := _label3d("HP", Vector3(0, 1.62, 0), 0.085, Color(1, 1, 1))
-	root.add_child(hp)
-	var cast := _label3d("Cast", Vector3(0, 1.84, 0), 0.075, Color(0.9, 0.6, 1))
-	root.add_child(cast)
-	var brk := _label3d("BreakLabel", Vector3(0, 2.02, 0), 0.085, Color(0.4, 0.85, 1))
-	root.add_child(brk)
+	# Sombra de apoyo: sin ella los personajes parecen flotar sobre la arena.
+	var pie := _disc(BattleField.BODY * 0.95, Color(0, 0, 0, 0.28))
+	pie.name = "Pie"
+	pie.position.y = MARK_Y * 0.3
+	root.add_child(pie)
 
-	# Barra de break: dos quads planos, el relleno anclado por la izquierda.
+	root.add_child(_label3d("HP", Vector3(0, 1.62, 0), 0.10, Color(1, 1, 1)))
+	root.add_child(_label3d("Cast", Vector3(0, 1.84, 0), 0.085, Color(0.9, 0.6, 1)))
+	root.add_child(_label3d("BreakLabel", Vector3(0, 2.02, 0), 0.10, Color(0.4, 0.85, 1)))
+
 	var bar_bg := MeshInstance3D.new()
 	bar_bg.name = "BreakBG"
 	bar_bg.mesh = _bar_mesh()
@@ -226,8 +261,6 @@ func _label3d(nombre: String, pos: Vector3, size: float, color: Color) -> Label3
 	var l := Label3D.new()
 	l.name = nombre
 	l.position = pos
-	# Sin fixed_size: con él la etiqueta mide lo mismo en pantalla llene lo
-	# que llene, y a esta distancia tapaba el tablero entero.
 	l.pixel_size = size * 0.045
 	l.font_size = 48
 	l.modulate = color
@@ -235,7 +268,6 @@ func _label3d(nombre: String, pos: Vector3, size: float, color: Color) -> Label3
 	l.outline_modulate = Color(0, 0, 0, 0.9)
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	l.no_depth_test = true
-	l.fixed_size = false
 	l.text = ""
 	return l
 
@@ -248,101 +280,133 @@ func _find_anim(root: Node) -> AnimationPlayer:
 			return f
 	return null
 
-func _refresh_grid_positions(instant: bool = false) -> void:
+func _play_anim(b: Battler, nombre: String) -> void:
+	var ap: AnimationPlayer = _anims.get(b)
+	if ap == null or not ap.has_animation(nombre):
+		return
+	if ap.current_animation != nombre:
+		ap.play(nombre)
+
+## True mientras alguien esté caminando: sirve para no dejar actuar a medias.
+func is_walking() -> bool:
+	return _walking > 0
+
+func _refresh_positions(instant: bool = false) -> void:
 	for b in battler_views.keys():
 		var view: Node3D = battler_views[b]
-		var target := _cell_to_world(b.grid_pos)
-		if instant:
+		var target := _field_to_world(b.field_pos)
+		if instant or view.position.distance_to(target) < 0.03:
 			view.position = target
 		else:
-			var tw := create_tween()
-			tw.tween_property(view, "position", target, 0.22).set_trans(Tween.TRANS_SINE)
+			_walk(view, b, target)
 		var cast_lbl := view.get_node_or_null("Cast") as Label3D
 		if cast_lbl:
 			cast_lbl.text = ("▷ %s" % b.pending_skill.skill_name) if (b.is_casting and b.pending_skill) else ""
 	_move_active_mark()
 
-# ---------- Resaltes ----------
-
-func _clear_highlights() -> void:
-	for child in highlight_node.get_children():
-		child.queue_free()
-
-func _add_highlight(cell: Vector2i, color: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	mi.mesh = _quad
-	mi.material_override = _flat_material(color)
-	mi.position = _cell_to_world(cell) + Vector3(0, MARK_Y, 0)
-	highlight_node.add_child(mi)
-	return mi
-
-func _show_move_range(b: Battler) -> void:
-	_clear_highlights()
-	for c in manager.grid.bfs_reachable(b.grid_pos, b.move_range):
-		_add_highlight(c, Color(0.3, 0.8, 1.0, 0.35))
-
-func _show_attack_targets(b: Battler) -> void:
-	_clear_highlights()
-	for dx in [-1, 0, 1]:
-		for dy in [-1, 0, 1]:
-			if dx == 0 and dy == 0: continue
-			var cell := b.grid_pos + Vector2i(dx, dy)
-			if not manager.grid.in_bounds(cell): continue
-			var t = manager.grid.get_at(cell)
-			if t and not t.is_player and t.is_alive():
-				_add_highlight(cell, Color(1.0, 0.3, 0.3, 0.5))
-
-func _show_skill_range(b: Battler, s: SkillData) -> void:
-	_clear_highlights()
-	for dy in range(-s.skill_range, s.skill_range + 1):
-		for dx in range(-s.skill_range, s.skill_range + 1):
-			var cell := b.grid_pos + Vector2i(dx, dy)
-			if not manager.grid.in_bounds(cell): continue
-			if manager.grid.chebyshev(b.grid_pos, cell) > s.skill_range: continue
-			_add_highlight(cell, Color(1.0, 0.6, 0.2, 0.28))
-
-func _preview_aoe(cell: Vector2i, s: SkillData) -> void:
-	for c in manager.grid.cells_in_aoe(cell, s.aoe_shape, s.aoe_radius):
-		_add_highlight(c, Color(1.0, 0.3, 0.3, 0.5))
-
-# ---------- Cursor y marcador de turno ----------
-
-func _clear_hover() -> void:
-	_hover_cell = Vector2i(-999, -999)
-	if _hover_tween:
-		_hover_tween.kill()
-		_hover_tween = null
-	if _hover_mark:
-		_hover_mark.queue_free()
-		_hover_mark = null
-
-func _set_hover_cell(cell: Vector2i) -> void:
-	if cell == _hover_cell:
+## Camina hasta el destino en vez de teletransportarse: gira el modelo hacia
+## donde va, pone la animación de paso y al llegar vuelve a mirar al enemigo.
+func _walk(view: Node3D, b: Battler, target: Vector3) -> void:
+	var model := view.get_node_or_null("Model") as Node3D
+	var dir := target - view.position
+	dir.y = 0.0
+	var dist := dir.length()
+	if dist < 0.03:
 		return
-	_hover_cell = cell
-	if _hover_mark == null:
-		_hover_mark = MeshInstance3D.new()
-		_hover_mark.mesh = _quad
-		highlight_node.add_child(_hover_mark)
-	_hover_mark.position = _cell_to_world(cell) + Vector3(0, MARK_Y * 2.0, 0)
-	var base := Color(1.0, 1.0, 0.3, 0.55)
-	match phase:
-		Phase.CHOOSE_MOVE:
-			base = Color(0.4, 0.9, 1.0, 0.6) if (cell in manager.grid.bfs_reachable(manager.current.grid_pos, manager.current.move_range)) else Color(1, 0.3, 0.3, 0.4)
-		Phase.PICK_TARGET_ATTACK:
-			var t = manager.grid.get_at(cell)
-			base = Color(1.0, 0.4, 0.4, 0.65) if (t and not t.is_player and t.is_alive() and manager.grid.chebyshev(manager.current.grid_pos, cell) <= manager.current.melee_range) else Color(0.6, 0.6, 0.6, 0.3)
-		Phase.PICK_TARGET_SKILL:
-			base = Color(1.0, 0.6, 0.2, 0.6) if (pending_skill and manager.grid.chebyshev(manager.current.grid_pos, cell) <= pending_skill.skill_range) else Color(0.6, 0.6, 0.6, 0.3)
-	var mat := _flat_material(base)
-	_hover_mark.material_override = mat
-	if _hover_tween:
-		_hover_tween.kill()
-	_hover_tween = create_tween().set_loops()
-	var alto := Color(base.r, base.g, base.b, clampf(base.a + 0.25, 0.0, 1.0))
-	var bajo := Color(base.r, base.g, base.b, clampf(base.a - 0.25, 0.0, 1.0))
-	_hover_tween.tween_property(mat, "albedo_color", alto, 0.35).set_trans(Tween.TRANS_SINE)
-	_hover_tween.tween_property(mat, "albedo_color", bajo, 0.35).set_trans(Tween.TRANS_SINE)
+	var dur: float = clampf(dist / WALK_SPEED, 0.18, 3.0)
+	_walking += 1
+	_play_anim(b, "walk")
+	var tw := create_tween()
+	if model:
+		tw.parallel().tween_property(model, "rotation:y", atan2(-dir.x, -dir.z), 0.16)
+	tw.parallel().tween_property(view, "position", target, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.chain().tween_callback(func():
+		_walking = maxi(0, _walking - 1)
+		_play_anim(b, "idle"))
+	if model:
+		tw.parallel().tween_property(model, "rotation:y", _facing_yaw(b), 0.22)
+
+# ---------- Círculos ----------
+
+func _clear_marks() -> void:
+	if _range_mark:
+		_range_mark.queue_free()
+		_range_mark = null
+	if _ghost:
+		_ghost.queue_free()
+		_ghost = null
+	if _aoe_mark:
+		_aoe_mark.queue_free()
+		_aoe_mark = null
+
+## Área alcanzable, recortada contra el borde de la arena. Un círculo a secas
+## se sale del campo y enseña sitios a los que no se puede ir.
+func _reach_mesh(center: Vector2, radius: float, grosor: float) -> ArrayMesh:
+	var pasos := 72
+	var relleno := PackedVector3Array()
+	var banda := PackedVector3Array()
+	var radios := PackedFloat32Array()
+	for i in pasos + 1:
+		var ang := TAU * float(i) / float(pasos)
+		var d := Vector2(cos(ang), sin(ang))
+		radios.append(manager.field.reach_in_direction(center, d, radius))
+	for i in pasos:
+		var a0 := TAU * float(i) / float(pasos)
+		var a1 := TAU * float(i + 1) / float(pasos)
+		var d0 := Vector2(cos(a0), sin(a0))
+		var d1 := Vector2(cos(a1), sin(a1))
+		var r0: float = radios[i]
+		var r1: float = radios[i + 1]
+		var p0 := Vector3(d0.x * r0, 0.0, d0.y * r0)
+		var p1 := Vector3(d1.x * r1, 0.0, d1.y * r1)
+		# Abanico del relleno, con el centro como vértice común.
+		relleno.append(Vector3.ZERO)
+		relleno.append(p1)
+		relleno.append(p0)
+		# Banda del borde, hacia dentro.
+		var q0 := Vector3(d0.x * maxf(r0 - grosor, 0.0), 0.0, d0.y * maxf(r0 - grosor, 0.0))
+		var q1 := Vector3(d1.x * maxf(r1 - grosor, 0.0), 0.0, d1.y * maxf(r1 - grosor, 0.0))
+		banda.append(p0); banda.append(p1); banda.append(q1)
+		banda.append(p0); banda.append(q1); banda.append(q0)
+
+	var mesh := ArrayMesh.new()
+	var a1_arr := []
+	a1_arr.resize(Mesh.ARRAY_MAX)
+	a1_arr[Mesh.ARRAY_VERTEX] = relleno
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a1_arr)
+	var a2_arr := []
+	a2_arr.resize(Mesh.ARRAY_MAX)
+	a2_arr[Mesh.ARRAY_VERTEX] = banda
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a2_arr)
+	return mesh
+
+func _show_range(center: Vector2, radius: float, color: Color) -> void:
+	if _range_mark:
+		_range_mark.queue_free()
+	var mi := MeshInstance3D.new()
+	mi.mesh = _reach_mesh(center, radius, 0.09)
+	mi.set_surface_override_material(0, _flat_material(Color(color.r, color.g, color.b, 0.12)))
+	mi.set_surface_override_material(1, _flat_material(color))
+	mi.position = _field_to_world(center) + Vector3(0, MARK_Y, 0)
+	_range_mark = mi
+	marks_node.add_child(_range_mark)
+
+func _show_ghost(p: Vector2, color: Color) -> void:
+	if _ghost == null:
+		_ghost = _disc(BattleField.BODY, color)
+		marks_node.add_child(_ghost)
+	_ghost.material_override = _flat_material(color)
+	_ghost.position = _field_to_world(p) + Vector3(0, MARK_Y * 2.0, 0)
+
+func _show_aoe(p: Vector2, radius: float, color: Color) -> void:
+	if _aoe_mark:
+		_aoe_mark.queue_free()
+	_aoe_mark = _ring(maxf(radius, BattleField.BODY), 0.05, color)
+	_aoe_mark.position = _field_to_world(p) + Vector3(0, MARK_Y * 2.5, 0)
+	var relleno := _disc(maxf(radius, BattleField.BODY), Color(color.r, color.g, color.b, 0.18))
+	relleno.position.y = -MARK_Y * 0.4
+	_aoe_mark.add_child(relleno)
+	marks_node.add_child(_aoe_mark)
 
 func _set_active_mark(b: Battler) -> void:
 	if b == null:
@@ -350,28 +414,23 @@ func _set_active_mark(b: Battler) -> void:
 	if _active_tween:
 		_active_tween.kill()
 		_active_tween = null
-	if _active_mark == null:
-		_active_mark = MeshInstance3D.new()
-		var q := QuadMesh.new()
-		q.size = Vector2(TILE, TILE)
-		q.orientation = PlaneMesh.FACE_Y
-		_active_mark.mesh = q
-		highlight_node.add_child(_active_mark)
-	_active_mark.position = _cell_to_world(b.grid_pos) + Vector3(0, MARK_Y * 0.5, 0)
-	var base := Color(0.4, 0.95, 0.4, 0.3) if b.is_player else Color(0.95, 0.4, 0.4, 0.3)
-	var mat := _flat_material(base)
-	_active_mark.material_override = mat
-	var brillo := Color(base.r, base.g, base.b, 0.65)
+	if _active_mark:
+		_active_mark.queue_free()
+	var color := Color(0.4, 0.95, 0.5) if b.is_player else Color(0.95, 0.4, 0.4)
+	_active_mark = _ring(BattleField.BODY * 1.45, 0.07, color)
+	_active_mark.position = _field_to_world(b.field_pos) + Vector3(0, MARK_Y * 0.6, 0)
+	marks_node.add_child(_active_mark)
+	var mat := _active_mark.material_override as StandardMaterial3D
 	_active_tween = create_tween().set_loops()
-	_active_tween.tween_property(mat, "albedo_color", brillo, 0.5).set_trans(Tween.TRANS_SINE)
-	_active_tween.tween_property(mat, "albedo_color", base, 0.5).set_trans(Tween.TRANS_SINE)
+	_active_tween.tween_property(mat, "albedo_color", Color(color.r, color.g, color.b, 0.35), 0.55).set_trans(Tween.TRANS_SINE)
+	_active_tween.tween_property(mat, "albedo_color", color, 0.55).set_trans(Tween.TRANS_SINE)
 
 func _move_active_mark() -> void:
 	if _active_mark == null or manager.current == null:
 		return
-	var target := _cell_to_world(manager.current.grid_pos) + Vector3(0, MARK_Y * 0.5, 0)
+	var target := _field_to_world(manager.current.field_pos) + Vector3(0, MARK_Y * 0.6, 0)
 	var tw := create_tween()
-	tw.tween_property(_active_mark, "position", target, 0.22)
+	tw.tween_property(_active_mark, "position", target, 0.25)
 
 # ---------- Estado y cola ----------
 
@@ -408,6 +467,9 @@ func _refresh_stats() -> void:
 		var model := view.get_node_or_null("Model") as Node3D
 		if model:
 			model.visible = b.is_alive()
+		var pie := view.get_node_or_null("Pie") as MeshInstance3D
+		if pie:
+			pie.visible = b.is_alive()
 
 func _refresh_atb() -> void:
 	for child in atb_box.get_children():
@@ -445,8 +507,7 @@ func _refresh_atb() -> void:
 
 func _on_turn_started(b: Battler, _bonus: int) -> void:
 	turn_label.text = "Turno: %s" % b.display_name
-	_clear_highlights()
-	_clear_hover()
+	_clear_marks()
 	_set_active_mark(b)
 	_refresh_atb()
 
@@ -454,8 +515,7 @@ func _on_need_action(b: Battler) -> void:
 	if auto_battle:
 		action_panel.visible = false
 		skill_panel.visible = false
-		_clear_highlights()
-		_clear_hover()
+		_clear_marks()
 		prompt_label.text = "AUTO: %s actúa solo" % b.display_name
 		await get_tree().create_timer(0.25).timeout
 		manager.auto_play_player(b)
@@ -464,17 +524,15 @@ func _on_need_action(b: Battler) -> void:
 	skill_panel.visible = false
 	has_moved = false
 	phase = Phase.CHOOSE_ACTION
-	prompt_label.text = "Mover (opcional) → elige acción o Esperar para pasar"
+	prompt_label.text = "Mover (opcional) → elige acción. Botón derecho gira la cámara."
 	btn_move.disabled = false
-	_clear_highlights()
-	_clear_hover()
+	_clear_marks()
 
 func _on_auto_toggled(on: bool) -> void:
 	auto_battle = on
 	if on and manager.current and manager.current.is_player and action_panel.visible:
 		action_panel.visible = false
-		_clear_highlights()
-		_clear_hover()
+		_clear_marks()
 		prompt_label.text = "AUTO activado"
 		manager.auto_play_player(manager.current)
 
@@ -487,6 +545,7 @@ func _on_battle_ended(victory: bool) -> void:
 	if _active_mark:
 		_active_mark.queue_free()
 		_active_mark = null
+	_clear_marks()
 	_on_log("[b]" + ("VICTORIA" if victory else "DERROTA") + "[/b]")
 	await get_tree().create_timer(1.5).timeout
 	BattleLoader.end_battle(victory)
@@ -498,26 +557,26 @@ func _on_log(text: String) -> void:
 
 func _on_battler_damaged(amount: int, was_crit: bool, was_weak: bool, b: Battler) -> void:
 	var color := Color(1, 1, 1)
-	var size := 0.10
+	var size := 0.11
 	if was_crit:
 		color = Color(1, 0.5, 0.4)
-		size = 0.14
+		size = 0.15
 	if was_weak:
 		color = Color(1, 0.7, 0.3)
-		size = 0.12
+		size = 0.13
 	_floating("-%d" % amount, b, color, size)
 	if was_crit or was_weak:
 		_shake(0.14, 0.18)
 
 func _on_battler_healed(amount: int, b: Battler) -> void:
-	_floating("+%d" % amount, b, Color(0.4, 1, 0.4), 0.10)
+	_floating("+%d" % amount, b, Color(0.4, 1, 0.4), 0.11)
 
 func _on_battler_broken(b: Battler) -> void:
-	_floating("BREAK!", b, Color(0.4, 0.85, 1), 0.14)
+	_floating("BREAK!", b, Color(0.4, 0.85, 1), 0.15)
 	_shake(0.22, 0.3)
 
 func _floating(text: String, b: Battler, color: Color, size: float) -> void:
-	var start := _cell_to_world(b.grid_pos) + Vector3(0, 1.3, 0)
+	var start := _field_to_world(b.field_pos) + Vector3(0, 1.3, 0)
 	var lbl := _label3d("Float", start, size, color)
 	lbl.text = text
 	fx_node.add_child(lbl)
@@ -529,8 +588,8 @@ func _floating(text: String, b: Battler, color: Color, size: float) -> void:
 	tw.tween_property(lbl, "modulate:a", 0.0, 0.7).set_delay(0.3)
 	tw.chain().tween_callback(lbl.queue_free)
 
-## Sacude la cámara, no la escena: mover la raíz movería también el tablero
-## y el rayo del ratón dejaría de caer donde toca.
+## Sacude la cámara dentro del brazo. No se mueve el rig: ese persigue al
+## personaje activo y el tirón se pelearía con el seguimiento.
 func _shake(amount: float, duration: float) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
@@ -538,31 +597,112 @@ func _shake(amount: float, duration: float) -> void:
 	var step := duration / float(steps)
 	var tw := create_tween()
 	for i in steps:
-		tw.tween_property(cam_rig, "position", _cam_home + Vector3(
+		tw.tween_property(camera, "position", Vector3(
 			rng.randf_range(-amount, amount), rng.randf_range(-amount, amount), 0.0), step)
-	tw.tween_property(cam_rig, "position", _cam_home, step)
+	tw.tween_property(camera, "position", Vector3.ZERO, step)
+
+# ---------- Entrada ----------
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		if phase in [Phase.CHOOSE_MOVE, Phase.PICK_TARGET_ATTACK, Phase.PICK_TARGET_SKILL]:
+			_clear_marks()
+			if manager.current:
+				_set_active_mark(manager.current)
+			phase = Phase.CHOOSE_ACTION
+			action_panel.visible = true
+			prompt_label.text = "Elige acción"
+			return
+	if manager.current == null:
+		return
+
+	if event is InputEventMouseMotion:
+		var p := _mouse_point()
+		if not _valid(p):
+			return
+		match phase:
+			Phase.CHOOSE_MOVE:
+				# Se enseña el punto RECORTADO, no el del ratón: así se ve de
+				# antemano dónde se va a acabar si el click se pasa del círculo.
+				var destino := manager.field.clamp_reachable(manager.current, p, float(manager.current.move_range))
+				_show_ghost(destino, Color(0.35, 0.85, 1.0, 0.55))
+			Phase.PICK_TARGET_ATTACK:
+				var t = manager.field.get_at(p)
+				var ok: bool = t != null and not t.is_player and t.is_alive() and BattleField.distance(manager.current.field_pos, t.field_pos) <= float(manager.current.melee_range) + BattleField.BODY * 2.0
+				_show_ghost(t.field_pos if t else p, Color(1.0, 0.35, 0.35, 0.6) if ok else Color(0.6, 0.6, 0.6, 0.3))
+			Phase.PICK_TARGET_SKILL:
+				if pending_skill:
+					var centro := p
+					var alcance := float(pending_skill.skill_range)
+					if BattleField.distance(manager.current.field_pos, centro) > alcance:
+						centro = manager.current.field_pos + (centro - manager.current.field_pos).normalized() * alcance
+					_show_aoe(centro, float(pending_skill.aoe_radius), Color(1.0, 0.6, 0.2, 0.75))
+		return
+
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var p := _mouse_point()
+		if not _valid(p):
+			return
+		match phase:
+			Phase.CHOOSE_MOVE:
+				if manager.submit_move(p):
+					has_moved = true
+					btn_move.disabled = true
+					phase = Phase.CHOOSE_ACTION
+					prompt_label.text = "Te moviste. Ahora elige acción (Atacar / Arts / Crafts / Defender / Esperar)"
+					_clear_marks()
+					_set_active_mark(manager.current)
+			Phase.PICK_TARGET_ATTACK:
+				var t = manager.field.get_at(p)
+				if t == null or t.is_player or not t.is_alive():
+					prompt_label.text = "Click encima de un enemigo. Esc cancela."
+					return
+				if BattleField.distance(manager.current.field_pos, t.field_pos) > float(manager.current.melee_range) + BattleField.BODY * 2.0:
+					prompt_label.text = "Fuera de alcance. Muévete más cerca o elige otra acción."
+					return
+				manager.submit_attack(t.field_pos)
+				phase = Phase.IDLE
+				action_panel.visible = false
+				_clear_marks()
+			Phase.PICK_TARGET_SKILL:
+				if pending_skill == null:
+					return
+				var centro := p
+				var alcance := float(pending_skill.skill_range)
+				if BattleField.distance(manager.current.field_pos, centro) > alcance:
+					centro = manager.current.field_pos + (centro - manager.current.field_pos).normalized() * alcance
+				if pending_kind == SkillData.Kind.ART:
+					manager.submit_art(pending_skill, centro)
+				else:
+					manager.submit_craft(pending_skill, centro)
+				pending_skill = null
+				pending_kind = -1
+				phase = Phase.IDLE
+				action_panel.visible = false
+				_clear_marks()
 
 # ---------- Botones ----------
 
 func _on_move_pressed() -> void:
 	if has_moved or manager.current == null: return
 	phase = Phase.CHOOSE_MOVE
-	prompt_label.text = "Click en casilla azul para moverse (Esc cancela)"
-	_show_move_range(manager.current)
+	prompt_label.text = "Click dentro del círculo para colocarte (Esc cancela)"
+	_show_range(manager.current.field_pos, float(manager.current.move_range), Color(0.35, 0.85, 1.0, 0.9))
 
 func _on_attack_pressed() -> void:
 	if manager.current == null: return
+	var alcance: float = float(manager.current.melee_range) + BattleField.BODY * 2.0
 	var has_target := false
 	for e in manager.enemies:
-		if e.is_alive() and manager.grid.chebyshev(manager.current.grid_pos, e.grid_pos) <= manager.current.melee_range:
+		if e.is_alive() and BattleField.distance(manager.current.field_pos, e.field_pos) <= alcance:
 			has_target = true
 			break
 	if not has_target:
-		prompt_label.text = "Ningún enemigo en rango melee. Usa Mover primero o elige Arts/Crafts."
+		prompt_label.text = "Ningún enemigo a tu alcance. Muévete primero o elige Arts/Crafts."
 		return
 	phase = Phase.PICK_TARGET_ATTACK
-	prompt_label.text = "Click sobre el enemigo resaltado en rojo"
-	_show_attack_targets(manager.current)
+	prompt_label.text = "Click sobre el enemigo que quieras golpear"
+	_show_range(manager.current.field_pos, alcance, Color(1.0, 0.4, 0.4, 0.9))
 
 func _on_art_pressed() -> void:
 	_open_skill_picker(SkillData.Kind.ART)
@@ -572,8 +712,7 @@ func _on_craft_pressed() -> void:
 
 func _on_defend_pressed() -> void:
 	action_panel.visible = false
-	_clear_hover()
-	_clear_highlights()
+	_clear_marks()
 	manager.submit_defend()
 
 func _on_item_pressed() -> void:
@@ -606,20 +745,17 @@ func _select_item(item: ItemData) -> void:
 	pending_item = item
 	skill_panel.visible = false
 	action_panel.visible = false
-	_clear_highlights()
-	_clear_hover()
+	_clear_marks()
 	manager.submit_item(item, manager.current)
 
 func _on_wait_pressed() -> void:
 	action_panel.visible = false
-	_clear_hover()
-	_clear_highlights()
+	_clear_marks()
 	manager.submit_wait()
 
 func _on_run_pressed() -> void:
 	action_panel.visible = false
-	_clear_hover()
-	_clear_highlights()
+	_clear_marks()
 	manager.submit_run()
 
 func _open_skill_picker(kind: int) -> void:
@@ -661,71 +797,5 @@ func _select_skill(s: SkillData) -> void:
 	pending_kind = s.kind
 	skill_panel.visible = false
 	phase = Phase.PICK_TARGET_SKILL
-	prompt_label.text = "Click sobre casilla objetivo (rango %d, AoE %d)" % [s.skill_range, s.aoe_radius]
-	_show_skill_range(manager.current, s)
-
-# ---------- Entrada ----------
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
-			if phase in [Phase.CHOOSE_MOVE, Phase.PICK_TARGET_ATTACK, Phase.PICK_TARGET_SKILL]:
-				_clear_highlights()
-				_clear_hover()
-				phase = Phase.CHOOSE_ACTION
-				prompt_label.text = "Elige acción"
-				return
-	if event is InputEventMouseMotion:
-		var cell := _mouse_cell()
-		if manager.grid != null and manager.grid.in_bounds(cell):
-			_set_hover_cell(cell)
-			if phase == Phase.PICK_TARGET_SKILL and pending_skill != null:
-				_show_skill_range(manager.current, pending_skill)
-				_preview_aoe(cell, pending_skill)
-		else:
-			_clear_hover()
-		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var cell := _mouse_cell()
-		if manager.grid == null or not manager.grid.in_bounds(cell): return
-		match phase:
-			Phase.CHOOSE_MOVE:
-				if manager.submit_move(cell):
-					has_moved = true
-					btn_move.disabled = true
-					phase = Phase.CHOOSE_ACTION
-					prompt_label.text = "Te moviste. Ahora elige acción (Atacar / Arts / Crafts / Defender / Esperar)"
-					_clear_highlights()
-					_clear_hover()
-			Phase.PICK_TARGET_ATTACK:
-				var t: Battler = manager.grid.get_at(cell)
-				if t == null or t.is_player or not t.is_alive():
-					prompt_label.text = "Click sobre un enemigo (resaltado en rojo). Esc cancela."
-					return
-				if manager.grid.chebyshev(manager.current.grid_pos, cell) > manager.current.melee_range:
-					prompt_label.text = "Fuera de alcance. Mueve más cerca o elige otra acción."
-					phase = Phase.CHOOSE_ACTION
-					action_panel.visible = true
-					_clear_highlights()
-					_clear_hover()
-					return
-				manager.submit_attack(cell)
-				phase = Phase.IDLE
-				action_panel.visible = false
-				_clear_highlights()
-				_clear_hover()
-			Phase.PICK_TARGET_SKILL:
-				if pending_skill == null: return
-				if manager.grid.chebyshev(manager.current.grid_pos, cell) > pending_skill.skill_range:
-					prompt_label.text = "Fuera de rango (%d casillas). Click más cerca o Esc." % pending_skill.skill_range
-					return
-				if pending_kind == SkillData.Kind.ART:
-					manager.submit_art(pending_skill, cell)
-				else:
-					manager.submit_craft(pending_skill, cell)
-				pending_skill = null
-				pending_kind = -1
-				phase = Phase.IDLE
-				action_panel.visible = false
-				_clear_highlights()
-				_clear_hover()
+	prompt_label.text = "Click en el campo (alcance %d m, área %d m)" % [s.skill_range, s.aoe_radius]
+	_show_range(manager.current.field_pos, float(s.skill_range), Color(1.0, 0.6, 0.2, 0.9))

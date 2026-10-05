@@ -50,33 +50,33 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("Box_ground")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.95, 0)
 
 [node name="PortalAlPatio" parent="." instance=ExtResource("3_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.95, 0)
 portal_id = "vuelta_patio"
 target_scene = "res://scenes/world/3d/patio_pueblo_3d.tscn"
 target_portal_id = "ir_sendero"
 prompt_text = "Volver al pueblo"
 
 [node name="PortalALaCueva" parent="." instance=ExtResource("3_portal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.95, 0)
 portal_id = "ir_cueva"
 target_scene = "res://scenes/world/3d/cueva_jefe_3d.tscn"
 target_portal_id = "salir_cueva"
 prompt_text = "Entrar a la cueva"
 
 [node name="ZonaEncuentros" parent="." instance=ExtResource("4_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 encounter_table = ExtResource("5_table")
 zone_size = Vector3(16, 2, 10)
 
 [node name="EnemyVisible1" parent="." instance=ExtResource("6_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.95, -3)
 enemies = Array[Resource]([ExtResource("7_fs")])
 wander_radius = 2.0
 
 [node name="EnemyVisible2" parent="." instance=ExtResource("6_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.95, 3)
 enemies = Array[Resource]([ExtResource("8_gob")])
 wander_radius = 2.5
